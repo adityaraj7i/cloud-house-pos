@@ -14,9 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <!-- jsPDF for Real Native PDF Download on Mobile & Web -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <!-- Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
@@ -33,6 +31,9 @@
       --border-light: #E5E7EB;
       --border-card: #F0F1F3;
       --danger-red: #D32F2F;
+      --nav-height: 62px;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-top: env(safe-area-inset-top, 0px);
       --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
     }
 
@@ -44,46 +45,35 @@
       user-select: none;
     }
 
+    html,
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #121518;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100dvh;
+      width: 100%;
+      height: 100%;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg-canvas);
       color: var(--text-main);
       overflow: hidden;
+      -webkit-font-smoothing: antialiased;
     }
 
-    .phone-frame {
-      width: 395px;
-      height: 852px;
+    /* Universal Full-Screen Mobile Container (Compatible with ALL Android & iOS Phones) */
+    .app-shell {
+      width: 100vw;
+      height: 100dvh;
+      max-width: 480px;
+      margin: 0 auto;
       background: var(--bg-canvas);
-      border-radius: 40px;
-      box-shadow: 0 0 0 10px #262A2E, 0 24px 60px rgba(0, 0, 0, 0.75);
-      position: relative;
-      overflow: hidden;
       display: flex;
       flex-direction: column;
-    }
-
-    @media (max-width: 500px) {
-      body {
-        background: var(--bg-canvas);
-      }
-
-      .phone-frame {
-        width: 100vw;
-        height: 100dvh;
-        border-radius: 0;
-        box-shadow: none;
-      }
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.12);
     }
 
     @keyframes fadeSlideUp {
       from {
         opacity: 0;
-        transform: translateY(8px);
+        transform: translateY(6px);
       }
 
       to {
@@ -115,7 +105,7 @@
     }
 
     .animate-view {
-      animation: fadeSlideUp 0.2s var(--ease-spring) forwards;
+      animation: fadeSlideUp 0.18s var(--ease-spring) forwards;
     }
 
     .pressable {
@@ -126,20 +116,20 @@
       transform: scale(0.96);
     }
 
-    /* FIXED TOAST BANNER: Completely hidden when inactive so it NEVER blocks header */
+    /* Toast Notification (Completely hidden when inactive) */
     .toast-banner {
       position: fixed;
-      top: 14px;
+      top: calc(var(--safe-top) + 12px);
       left: 50%;
-      transform: translate(-50%, -150%);
-      width: calc(100% - 32px);
-      max-width: 360px;
+      transform: translate(-50%, -180%);
+      width: calc(100% - 28px);
+      max-width: 420px;
       background: #1F2937;
       color: #FFFFFF;
-      padding: 11px 16px;
+      padding: 12px 16px;
       border-radius: 12px;
-      font-size: 13.5px;
-      font-weight: 500;
+      font-size: 14px;
+      font-weight: 600;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -147,7 +137,7 @@
       z-index: 9999;
       opacity: 0;
       pointer-events: none;
-      transition: transform 0.28s var(--ease-spring), opacity 0.22s ease;
+      transition: transform 0.25s var(--ease-spring), opacity 0.2s ease;
     }
 
     .toast-banner.show {
@@ -155,11 +145,11 @@
       opacity: 1;
     }
 
-    /* Top App Header */
+    /* Top App Header (Larger & Proportional like Video) */
     .app-header {
       background: var(--green-primary);
       color: #FFFFFF;
-      padding: 10px 14px 10px;
+      padding: calc(var(--safe-top) + 10px) 16px 12px;
       flex-shrink: 0;
       z-index: 20;
     }
@@ -168,22 +158,22 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      min-height: 38px;
+      min-height: 42px;
     }
 
     .date-pill {
       background: rgba(255, 255, 255, 0.22);
       color: #FFFFFF;
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 600;
-      padding: 5px 12px;
-      border-radius: 16px;
+      padding: 6px 14px;
+      border-radius: 18px;
       cursor: pointer;
     }
 
     .header-title {
-      font-size: 17px;
-      font-weight: 600;
+      font-size: 19px;
+      font-weight: 700;
       letter-spacing: -0.2px;
       text-align: center;
       flex: 1;
@@ -192,7 +182,7 @@
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
 
     .icon-btn {
@@ -203,7 +193,7 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      padding: 5px;
+      padding: 6px;
       border-radius: 8px;
     }
 
@@ -212,8 +202,8 @@
       color: #FFFFFF;
       border: none;
       border-radius: 8px;
-      padding: 5px 10px;
-      font-size: 12px;
+      padding: 6px 11px;
+      font-size: 13px;
       font-weight: 600;
       display: flex;
       align-items: center;
@@ -222,10 +212,10 @@
     }
 
     .pdf-icon-btn {
-      width: 32px;
-      height: 32px;
-      border-radius: 7px;
-      background: rgba(255, 255, 255, 0.2);
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.22);
       border: none;
       color: #FFFFFF;
       display: flex;
@@ -235,36 +225,35 @@
     }
 
     .avatar-circle-g {
-      width: 32px;
-      height: 32px;
+      width: 35px;
+      height: 35px;
       border-radius: 50%;
       background: #E5E7EB;
       color: #374151;
       font-weight: 700;
-      font-size: 14px;
+      font-size: 15.5px;
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 1.5px solid #FFFFFF;
+      border: 2px solid rgba(255, 255, 255, 0.85);
       cursor: pointer;
-      position: relative;
     }
 
-    /* Status Segmented Tabs */
+    /* Segmented Tabs (Pending | Completed | Cancelled) */
     .status-tabs {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
-      margin-top: 8px;
+      gap: 8px;
+      margin-top: 10px;
     }
 
     .status-tab {
-      height: 34px;
-      border-radius: 6px;
+      height: 38px;
+      border-radius: 8px;
       border: none;
       background: transparent;
       color: #FFFFFF;
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 500;
       cursor: pointer;
       transition: background-color 0.18s ease;
@@ -274,13 +263,13 @@
       background: var(--orange-active);
       color: #FFFFFF;
       font-weight: 600;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.14);
     }
 
-    /* Sub-filters in Completed Tab */
+    /* Completed Subfilters (All | Item Removed | Item Unserved) */
     .completed-subfilters {
       background: #FFFFFF;
-      padding: 8px 12px;
+      padding: 10px 14px;
       display: flex;
       gap: 8px;
       border-bottom: 1px solid var(--border-light);
@@ -293,12 +282,12 @@
     }
 
     .subfilter-pill {
-      padding: 6px 14px;
-      border-radius: 6px;
+      padding: 7px 16px;
+      border-radius: 7px;
       border: none;
       background: #F3F4F6;
       color: #4B5563;
-      font-size: 12.5px;
+      font-size: 13.5px;
       font-weight: 500;
       white-space: nowrap;
       cursor: pointer;
@@ -312,9 +301,9 @@
 
     /* Search & Sort Row */
     .search-bar-wrap {
-      padding: 10px 12px 6px;
+      padding: 12px 14px 6px;
       display: flex;
-      gap: 8px;
+      gap: 10px;
       align-items: center;
       background: var(--bg-canvas);
       flex-shrink: 0;
@@ -322,14 +311,14 @@
 
     .search-input-box {
       flex: 1;
-      height: 40px;
+      height: 44px;
       background: #FFFFFF;
       border: 1px solid #E5E7EB;
-      border-radius: 8px;
+      border-radius: 10px;
       display: flex;
       align-items: center;
-      padding: 0 12px;
-      gap: 8px;
+      padding: 0 14px;
+      gap: 10px;
     }
 
     .search-input-box:focus-within {
@@ -340,31 +329,31 @@
       border: none;
       outline: none;
       width: 100%;
-      font-size: 14px;
+      font-size: 15px;
       color: var(--text-main);
       background: transparent;
     }
 
     .sort-dropdown {
-      height: 40px;
+      height: 44px;
       background: #FFFFFF;
       border: 1px solid #E5E7EB;
-      border-radius: 8px;
-      padding: 0 10px;
+      border-radius: 10px;
+      padding: 0 12px;
       display: flex;
       align-items: center;
       gap: 6px;
-      font-size: 13px;
+      font-size: 14px;
       color: var(--text-secondary);
       font-weight: 500;
       cursor: pointer;
     }
 
-    /* Scrollable Screen Area */
+    /* Main Scrollable Body */
     .screen-body {
       flex: 1;
       overflow-y: auto;
-      padding-bottom: 115px;
+      padding-bottom: 92px;
       scrollbar-width: none;
       -webkit-overflow-scrolling: touch;
     }
@@ -373,18 +362,18 @@
       display: none;
     }
 
-    /* ORDER CARD (Green Circle Toggle Switch Removed as requested!) */
+    /* ORDER CARDS (Larger, Clearer Typography as in Video 00:02-00:09) */
     .order-card {
       background: #FFFFFF;
-      border-radius: 10px;
-      margin: 8px 12px;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      border-radius: 12px;
+      margin: 10px 14px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
       border: 1px solid #ECEEF0;
       position: relative;
     }
 
     .order-card-header {
-      padding: 11px 14px;
+      padding: 13px 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -392,7 +381,7 @@
     }
 
     .order-id-title {
-      font-size: 14.5px;
+      font-size: 16px;
       font-weight: 700;
       color: #374151;
     }
@@ -400,14 +389,14 @@
     .order-header-actions {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 14px;
     }
 
     .circle-plus-btn {
-      width: 24px;
-      height: 24px;
+      width: 26px;
+      height: 26px;
       border-radius: 50%;
-      border: 1.5px solid #9CA3AF;
+      border: 1.6px solid #9CA3AF;
       background: transparent;
       color: #6B7280;
       display: flex;
@@ -428,17 +417,17 @@
 
     .details-popover {
       position: absolute;
-      top: 40px;
-      right: 16px;
+      top: 44px;
+      right: 18px;
       background: #FFFFFF;
-      border-radius: 8px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
       border: 1px solid #E5E7EB;
-      padding: 9px 14px;
+      padding: 10px 16px;
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 13.5px;
+      font-size: 14.5px;
       font-weight: 500;
       color: #374151;
       z-index: 25;
@@ -447,17 +436,16 @@
     }
 
     .order-items-list {
-      padding: 4px 14px;
+      padding: 4px 16px;
     }
 
-    /* Clean 3-Column Row (Item Name | xQty | Price) - Toggle Switch Removed */
     .order-item-row {
       display: grid;
-      grid-template-columns: 1fr 54px 90px;
+      grid-template-columns: 1fr 56px 96px;
       align-items: center;
-      padding: 9px 0;
+      padding: 11px 0;
       border-bottom: 1px solid #F5F6F7;
-      font-size: 13.5px;
+      font-size: 14.5px;
     }
 
     .order-item-row:last-child {
@@ -467,11 +455,12 @@
     .item-name-text {
       color: #4B5563;
       font-weight: 400;
+      line-height: 1.3;
     }
 
     .item-qty-text {
       color: #6B7280;
-      font-size: 13.5px;
+      font-size: 14px;
       text-align: center;
       font-weight: 500;
     }
@@ -480,11 +469,11 @@
       text-align: right;
       color: #374151;
       font-weight: 500;
-      font-size: 13.5px;
+      font-size: 14.5px;
     }
 
     .order-card-footer {
-      padding: 10px 14px;
+      padding: 12px 16px;
       border-top: 1px solid var(--border-card);
       display: flex;
       align-items: center;
@@ -492,13 +481,13 @@
     }
 
     .order-total-label {
-      font-size: 14.5px;
+      font-size: 15.5px;
       font-weight: 700;
       color: #374151;
     }
 
     .order-time-label {
-      font-size: 13px;
+      font-size: 13.5px;
       color: #6B7280;
     }
 
@@ -506,9 +495,9 @@
       background: var(--green-primary);
       color: #FFFFFF;
       border: none;
-      border-radius: 6px;
-      padding: 7px 14px;
-      font-size: 13.5px;
+      border-radius: 7px;
+      padding: 8px 16px;
+      font-size: 14.5px;
       font-weight: 600;
       display: flex;
       align-items: center;
@@ -516,15 +505,16 @@
       cursor: pointer;
     }
 
+    /* FIXED POSITION: Right above Bottom Nav Bar (Matches Video 00:02-00:09) */
     .floating-total-pill {
       position: absolute;
-      bottom: 70px;
+      bottom: calc(var(--nav-height) + var(--safe-bottom) + 10px);
       right: 14px;
       background: var(--green-primary);
       color: #FFFFFF;
-      padding: 10px 14px;
-      border-radius: 8px;
-      font-size: 15px;
+      padding: 11px 16px;
+      border-radius: 9px;
+      font-size: 15.5px;
       font-weight: 700;
       display: flex;
       align-items: center;
@@ -533,33 +523,32 @@
       z-index: 22;
     }
 
-    /* SQUARE TABLE CARDS GRID (Manage Orders - 00:15 in video) */
+    /* MANAGE ORDERS SQUARE TABLE GRID (Video 00:15-00:20) */
     .tables-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 12px;
-      padding: 6px 12px 24px;
+      padding: 8px 14px 28px;
     }
 
     .table-card {
       background: #FFFFFF;
-      border-radius: 10px;
+      border-radius: 12px;
       overflow: hidden;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
       border: 1px solid #EAECEF;
       display: flex;
       flex-direction: column;
-      aspect-ratio: 1 / 0.92;
-      /* Crisp Square Proportion matching video */
+      aspect-ratio: 1 / 0.94;
       cursor: pointer;
     }
 
     .table-card-header {
-      height: 36px;
+      height: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 14.5px;
+      font-size: 15.5px;
       font-weight: 700;
       padding: 0 8px;
       flex-shrink: 0;
@@ -601,27 +590,28 @@
       flex-direction: column;
       align-items: center;
       justify-content: space-between;
-      padding: 12px 10px 10px;
+      padding: 12px 10px 12px;
     }
 
     .order-count-row {
       display: flex;
       align-items: center;
       gap: 6px;
-      font-size: 12.5px;
+      font-size: 13px;
       color: #6B7280;
     }
 
     .order-count-badge {
       background: #F3F4F6;
-      padding: 3px 9px;
-      border-radius: 5px;
+      padding: 3px 10px;
+      border-radius: 6px;
       font-weight: 500;
       color: #4B5563;
+      font-size: 13px;
     }
 
     .table-active-price {
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 600;
       color: #374151;
     }
@@ -654,33 +644,32 @@
     }
 
     .tap-create-label {
-      font-size: 12px;
+      font-size: 13px;
       color: #6B7280;
     }
 
-    /* Add New Table Card Tile in Grid */
     .add-table-tile {
       border: 2px dashed #CBD5E1;
-      background: rgba(255, 255, 255, 0.6);
-      border-radius: 10px;
-      aspect-ratio: 1 / 0.92;
+      background: rgba(255, 255, 255, 0.65);
+      border-radius: 12px;
+      aspect-ratio: 1 / 0.94;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: 8px;
       color: #64748B;
-      font-size: 13.5px;
+      font-size: 14px;
       font-weight: 600;
       cursor: pointer;
     }
 
-    /* Customers Screen (00:24 in video) */
+    /* CUSTOMERS SCREEN (Video 00:24-00:25) */
     .customer-card {
       background: #FFFFFF;
-      border-radius: 10px;
-      margin: 8px 12px;
-      padding: 12px 14px;
+      border-radius: 12px;
+      margin: 9px 14px;
+      padding: 14px 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -692,34 +681,34 @@
     .customer-left {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
     }
 
     .cust-avatar {
-      width: 42px;
-      height: 42px;
+      width: 46px;
+      height: 46px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       color: #FFFFFF;
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 600;
       flex-shrink: 0;
     }
 
     .cust-info h4 {
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 500;
       color: #1F2937;
-      margin-bottom: 3px;
+      margin-bottom: 4px;
     }
 
     .cust-phone {
       display: flex;
       align-items: center;
       gap: 5px;
-      font-size: 12.5px;
+      font-size: 13.5px;
       color: #6B7280;
     }
 
@@ -728,23 +717,24 @@
       align-items: center;
       justify-content: flex-end;
       gap: 5px;
-      font-size: 12px;
+      font-size: 13px;
       color: #6B7280;
     }
 
     .due-amount {
-      font-size: 14.5px;
+      font-size: 15.5px;
       font-weight: 700;
       color: var(--danger-red);
       margin-top: 3px;
     }
 
+    /* FIXED FAB POSITION: Right above Bottom Nav Bar (Video 00:24) */
     .fab-add-btn {
       position: absolute;
-      bottom: 74px;
-      right: 18px;
-      width: 54px;
-      height: 54px;
+      bottom: calc(var(--nav-height) + var(--safe-bottom) + 12px);
+      right: 16px;
+      width: 56px;
+      height: 56px;
       border-radius: 50%;
       background: var(--green-primary);
       color: #FFFFFF;
@@ -757,12 +747,12 @@
       z-index: 25;
     }
 
-    /* Form Controls */
+    /* Forms */
     .form-section-card {
       background: #FFFFFF;
-      border-radius: 10px;
-      margin: 10px 12px;
-      padding: 14px;
+      border-radius: 12px;
+      margin: 10px 14px;
+      padding: 16px;
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     }
 
@@ -770,7 +760,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-size: 14.5px;
+      font-size: 15.5px;
       font-weight: 600;
       color: #374151;
       cursor: pointer;
@@ -779,11 +769,11 @@
     .form-input,
     .form-select {
       width: 100%;
-      height: 44px;
+      height: 46px;
       border: 1px solid #E5E7EB;
       border-radius: 8px;
-      padding: 0 12px;
-      font-size: 14px;
+      padding: 0 14px;
+      font-size: 15px;
       color: var(--text-main);
       margin-top: 10px;
       outline: none;
@@ -797,22 +787,22 @@
 
     .full-green-btn {
       width: 100%;
-      height: 46px;
+      height: 48px;
       background: var(--green-primary);
       color: #FFFFFF;
       border: none;
-      border-radius: 8px;
-      font-size: 15px;
+      border-radius: 9px;
+      font-size: 16px;
       font-weight: 600;
       cursor: pointer;
     }
 
-    /* ANALYTICS DASHBOARD (100% Clean SVG Vector Icons - No Emojis!) */
+    /* ANALYTICS DASHBOARD (Complete Video Match 00:31-00:39) */
     .analytics-section {
       background: #FFFFFF;
       border-radius: 12px;
-      margin: 10px 12px;
-      padding: 14px;
+      margin: 10px 14px;
+      padding: 16px;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     }
 
@@ -820,14 +810,14 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
     }
 
     .analytics-sec-title {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 15px;
+      gap: 9px;
+      font-size: 16px;
       font-weight: 600;
       color: #374151;
     }
@@ -836,8 +826,9 @@
       background: #F4FBF6;
       border: 1px solid #E1F3E6;
       border-radius: 10px;
-      padding: 12px 14px;
+      padding: 14px;
       margin-bottom: 10px;
+      position: relative;
     }
 
     .metric-grid-2 {
@@ -848,7 +839,7 @@
 
     .metric-box {
       border-radius: 10px;
-      padding: 12px;
+      padding: 13px;
       position: relative;
     }
 
@@ -877,34 +868,46 @@
       border: 1px solid #F7F0D4;
     }
 
+    .metric-box.gray-tint {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+    }
+
     .svg-icon-wrap {
-      width: 28px;
-      height: 28px;
-      border-radius: 6px;
+      width: 30px;
+      height: 30px;
+      border-radius: 7px;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
+    }
+
+    .card-Diag-arrow {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      color: #9CA3AF;
     }
 
     .metric-value {
-      font-size: 15.5px;
+      font-size: 16.5px;
       font-weight: 700;
       color: #1F2937;
-      margin-bottom: 2px;
+      margin-bottom: 3px;
     }
 
     .metric-label {
-      font-size: 12px;
+      font-size: 13px;
       color: #6B7280;
     }
 
     .total-sales-pill {
       background: #FCE8E8;
       color: #D32F2F;
-      font-size: 11.5px;
+      font-size: 12px;
       font-weight: 500;
-      padding: 3px 8px;
+      padding: 4px 9px;
       border-radius: 6px;
       display: flex;
       align-items: center;
@@ -915,7 +918,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px 12px;
+      padding: 12px 14px;
       border-radius: 8px;
       margin-bottom: 8px;
     }
@@ -932,16 +935,16 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 14px;
+      font-size: 15px;
       color: #374151;
     }
 
     .status-badge-circle {
-      width: 24px;
-      height: 24px;
+      width: 26px;
+      height: 26px;
       border-radius: 50%;
       color: #FFFFFF;
-      font-size: 12.5px;
+      font-size: 13px;
       font-weight: 700;
       display: flex;
       align-items: center;
@@ -949,6 +952,12 @@
     }
 
     .top-toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .top-pill-group {
       display: flex;
       background: #F3F4F6;
       border-radius: 16px;
@@ -958,9 +967,9 @@
     .top-toggle-btn {
       border: none;
       background: transparent;
-      padding: 3px 10px;
+      padding: 4px 11px;
       border-radius: 14px;
-      font-size: 12px;
+      font-size: 12.5px;
       font-weight: 500;
       color: #6B7280;
       cursor: pointer;
@@ -969,13 +978,14 @@
     .top-toggle-btn.active {
       background: var(--green-primary);
       color: #FFFFFF;
+      font-weight: 600;
     }
 
     .rank-item-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px;
+      padding: 11px 12px;
       background: #F9FAFB;
       border-radius: 8px;
       margin-bottom: 8px;
@@ -984,15 +994,15 @@
     .rank-left {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
 
     .rank-num-box {
-      width: 26px;
-      height: 26px;
+      width: 28px;
+      height: 28px;
       border-radius: 6px;
       color: #FFFFFF;
-      font-size: 12.5px;
+      font-size: 13px;
       font-weight: 700;
       display: flex;
       align-items: center;
@@ -1019,18 +1029,18 @@
     .sold-pill {
       background: #E8F7EC;
       color: var(--green-primary);
-      font-size: 12px;
+      font-size: 12.5px;
       font-weight: 600;
-      padding: 4px 10px;
+      padding: 4px 11px;
       border-radius: 12px;
     }
 
-    /* Restaurant Menu Screen */
+    /* RESTAURANT MENU SCREEN (Video 00:41-00:59) */
     .menu-categories-strip {
       background: var(--green-primary);
       display: flex;
       gap: 6px;
-      padding: 4px 12px 10px;
+      padding: 4px 14px 12px;
       overflow-x: auto;
       scrollbar-width: none;
       flex-shrink: 0;
@@ -1041,12 +1051,12 @@
     }
 
     .menu-cat-pill {
-      padding: 6px 14px;
-      border-radius: 6px;
+      padding: 7px 15px;
+      border-radius: 7px;
       border: none;
       background: transparent;
       color: #FFFFFF;
-      font-size: 13.5px;
+      font-size: 14.5px;
       font-weight: 500;
       white-space: nowrap;
       cursor: pointer;
@@ -1068,7 +1078,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 13px 16px;
+      padding: 14px 16px;
       border-bottom: 1px solid #F0F1F3;
     }
 
@@ -1081,29 +1091,29 @@
     }
 
     .menu-item-title {
-      font-size: 14.5px;
+      font-size: 15.5px;
       font-weight: 500;
       color: #374151;
-      margin-bottom: 2px;
+      margin-bottom: 3px;
       display: flex;
       align-items: center;
       gap: 6px;
     }
 
     .menu-item-price {
-      font-size: 13.5px;
+      font-size: 14px;
       color: #6B7280;
     }
 
     .qty-stepper {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
     }
 
     .stepper-circle-btn {
-      width: 26px;
-      height: 26px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       border: 1.5px solid #9CA3AF;
       background: transparent;
@@ -1111,7 +1121,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
+      font-size: 17px;
       cursor: pointer;
     }
 
@@ -1122,22 +1132,22 @@
     }
 
     .stepper-val {
-      font-size: 14.5px;
+      font-size: 15.5px;
       font-weight: 600;
       color: #374151;
-      min-width: 14px;
+      min-width: 16px;
       text-align: center;
     }
 
     .menu-cart-bar {
       position: absolute;
-      bottom: 16px;
+      bottom: calc(var(--safe-bottom) + 16px);
       left: 14px;
       right: 14px;
       background: var(--green-primary);
       color: #FFFFFF;
       border-radius: 10px;
-      padding: 12px 16px;
+      padding: 13px 18px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -1146,14 +1156,14 @@
       cursor: pointer;
     }
 
-    /* Bottom Navigation */
+    /* Bottom Navigation Bar */
     .bottom-nav {
-      height: 60px;
+      height: calc(var(--nav-height) + var(--safe-bottom));
+      padding-bottom: var(--safe-bottom);
       background: #FFFFFF;
       border-top: 1px solid #E5E7EB;
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      padding-bottom: 4px;
       flex-shrink: 0;
       z-index: 25;
     }
@@ -1165,9 +1175,9 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 3px;
+      gap: 4px;
       color: #6B7280;
-      font-size: 11.5px;
+      font-size: 12px;
       font-weight: 500;
       cursor: pointer;
     }
@@ -1177,14 +1187,15 @@
       font-weight: 600;
     }
 
-    /* Bottom Sheet Modals */
+    /* Bottom Sheets */
     .modal-backdrop {
-      position: absolute;
+      position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, 0.48);
-      z-index: 60;
+      z-index: 80;
       display: none;
       align-items: flex-end;
+      justify-content: center;
     }
 
     .modal-backdrop.open {
@@ -1193,18 +1204,20 @@
 
     .bottom-sheet {
       width: 100%;
-      max-height: 88%;
+      max-width: 480px;
+      max-height: 88dvh;
       background: #FFFFFF;
       border-top-left-radius: 20px;
       border-top-right-radius: 20px;
       display: flex;
       flex-direction: column;
-      animation: sheetSlideUp 0.25s var(--ease-spring);
+      animation: sheetSlideUp 0.24s var(--ease-spring);
       overflow: hidden;
+      padding-bottom: var(--safe-bottom);
     }
 
     .sheet-header {
-      padding: 14px 18px 12px;
+      padding: 15px 18px 13px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -1215,7 +1228,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      font-size: 16px;
+      font-size: 17px;
       font-weight: 700;
       color: #1F2937;
     }
@@ -1226,14 +1239,13 @@
     }
 
     .sheet-footer {
-      padding: 12px 18px 20px;
+      padding: 12px 18px 18px;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
       border-top: 1px solid #F0F1F3;
     }
 
-    /* Payment Method Selector Cards */
     .pay-methods-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -1244,11 +1256,11 @@
     .pay-method-card {
       border: 1.5px solid #E5E7EB;
       border-radius: 8px;
-      padding: 9px 10px;
+      padding: 10px 12px;
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 13px;
+      font-size: 13.5px;
       font-weight: 600;
       color: #374151;
       cursor: pointer;
@@ -1261,7 +1273,6 @@
       color: var(--green-primary);
     }
 
-    /* Color Swatches for Add Table Canvas */
     .theme-swatch-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -1270,9 +1281,9 @@
     }
 
     .theme-swatch {
-      padding: 8px;
+      padding: 9px;
       border-radius: 8px;
-      font-size: 12.5px;
+      font-size: 13px;
       font-weight: 700;
       text-align: center;
       cursor: pointer;
@@ -1287,8 +1298,8 @@
 
 <body>
 
-  <div class="phone-frame" id="appRoot">
-    <!-- Fixed Toast Notification -->
+  <div class="app-shell" id="appRoot">
+    <!-- Toast Banner -->
     <div class="toast-banner" id="toastBanner">
       <span id="toastText">Saved</span>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ADE80" stroke-width="3">
@@ -1306,7 +1317,7 @@
     <!-- Bottom Navigation Bar -->
     <div class="bottom-nav" id="bottomNav">
       <button class="nav-tab active pressable" onclick="switchMainTab('bills')">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M4 3h16v18l-2.5-1.5L15 21l-3-1.5L9 21l-2.5-1.5L4 21V3z" />
           <line x1="8" y1="8" x2="16" y2="8" />
           <line x1="8" y1="12" x2="16" y2="12" />
@@ -1315,7 +1326,7 @@
         <span>Bills</span>
       </button>
       <button class="nav-tab pressable" onclick="switchMainTab('takeOrder')">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="3" y="4" width="18" height="16" rx="2" />
           <line x1="3" y1="10" x2="21" y2="10" />
           <line x1="9" y1="10" x2="9" y2="20" />
@@ -1324,7 +1335,7 @@
         <span>Take Order</span>
       </button>
       <button class="nav-tab pressable" onclick="switchMainTab('customers')">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="9" />
           <circle cx="12" cy="10" r="3" />
           <path d="M6.5 18.5c1.2-2 3.2-3 5.5-3s4.3 1 5.5 3" />
@@ -1332,7 +1343,7 @@
         <span>Customers</span>
       </button>
       <button class="nav-tab pressable" onclick="switchMainTab('analytics')">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="3" y="3" width="18" height="18" rx="3" />
           <line x1="8" y1="16" x2="8" y2="12" />
           <line x1="12" y1="16" x2="12" y2="8" />
@@ -1342,7 +1353,7 @@
       </button>
     </div>
 
-    <!-- 1. ORDER DETAILS & CHECKOUT MODAL (With Discount + Cash/Fonepay/eSewa/Credit) -->
+    <!-- 1. ORDER DETAILS & CHECKOUT MODAL (Video 01:03-01:06) -->
     <div class="modal-backdrop" id="orderDetailsModal" onclick="closeModals()">
       <div class="bottom-sheet" onclick="event.stopPropagation()">
         <div class="sheet-header">
@@ -1382,21 +1393,21 @@
             style="background:none; border:none; font-size:20px; color:#6B7280; cursor:pointer;">✕</button>
         </div>
         <div class="sheet-body">
-          <label style="font-size:12.5px; font-weight:600; color:#4B5563;">Category</label>
+          <label style="font-size:13px; font-weight:600; color:#4B5563;">Category</label>
           <select class="form-select" id="menuModalCatSelect"></select>
 
           <div style="margin-top:10px;">
-            <label style="font-size:12.5px; font-weight:600; color:#4B5563;">Or New Category Name (Optional)</label>
+            <label style="font-size:13px; font-weight:600; color:#4B5563;">Or New Category Name (Optional)</label>
             <input class="form-input" id="menuModalCustomCat" type="text" placeholder="e.g., Special Combo" />
           </div>
 
           <div style="margin-top:10px;">
-            <label style="font-size:12.5px; font-weight:600; color:#4B5563;">Item Name</label>
+            <label style="font-size:13px; font-weight:600; color:#4B5563;">Item Name</label>
             <input class="form-input" id="menuModalName" type="text" placeholder="e.g., Black Coffee" />
           </div>
 
           <div style="margin-top:10px;">
-            <label style="font-size:12.5px; font-weight:600; color:#4B5563;">Price (Rs.)</label>
+            <label style="font-size:13px; font-weight:600; color:#4B5563;">Price (Rs.)</label>
             <input class="form-input" id="menuModalPrice" type="number" placeholder="e.g., 80" />
           </div>
         </div>
@@ -1413,17 +1424,17 @@
               <rect x="3" y="4" width="18" height="16" rx="2" />
               <line x1="3" y1="10" x2="21" y2="10" />
             </svg>
-            <span>Add New Table / Zone</span>
+            <span>Add New Table / Cabin</span>
           </div>
           <button onclick="closeModals()"
             style="background:none; border:none; font-size:20px; color:#6B7280; cursor:pointer;">✕</button>
         </div>
         <div class="sheet-body">
-          <label style="font-size:12.5px; font-weight:600; color:#4B5563;">Table Name or Customer Cabin</label>
-          <input class="form-input" id="newTableNameInput" type="text" placeholder="e.g., T12, Rooftop 1, Garden VIP" />
+          <label style="font-size:13px; font-weight:600; color:#4B5563;">Table Name or Customer Cabin</label>
+          <input class="form-input" id="newTableNameInput" type="text" placeholder="e.g., T12, Rooftop 1, VIP Cabin" />
 
           <div style="margin-top:14px;">
-            <label style="font-size:12.5px; font-weight:600; color:#4B5563;">Select Header Color Theme</label>
+            <label style="font-size:13px; font-weight:600; color:#4B5563;">Select Header Color Theme</label>
             <div class="theme-swatch-grid" id="tableThemeSwatches"></div>
           </div>
         </div>
@@ -1448,30 +1459,30 @@
             style="background:none; border:none; font-size:20px; color:#6B7280; cursor:pointer;">✕</button>
         </div>
         <div class="sheet-body">
-          <label style="font-size:12px; font-weight:600; color:#4B5563;">Customer Name</label>
+          <label style="font-size:13px; font-weight:600; color:#4B5563;">Customer Name</label>
           <input class="form-input" id="editCustName" type="text" />
 
           <div style="margin-top:10px;">
-            <label style="font-size:12px; font-weight:600; color:#4B5563;">Mobile Number</label>
+            <label style="font-size:13px; font-weight:600; color:#4B5563;">Mobile Number</label>
             <input class="form-input" id="editCustPhone" type="tel" />
           </div>
 
           <div style="margin-top:10px;">
-            <label style="font-size:12px; font-weight:600; color:#4B5563;">Total Due Balance (Rs.)</label>
+            <label style="font-size:13px; font-weight:600; color:#4B5563;">Total Due Balance (Rs.)</label>
             <input class="form-input" id="editCustDue" type="number" step="0.01" />
           </div>
 
           <div style="margin-top:10px;">
-            <label style="font-size:12px; font-weight:600; color:#4B5563;">Address / Notes</label>
+            <label style="font-size:13px; font-weight:600; color:#4B5563;">Address / Notes</label>
             <input class="form-input" id="editCustAddress" type="text" placeholder="Address" />
           </div>
         </div>
         <div class="sheet-footer">
           <button class="pressable"
-            style="height:44px; border-radius:8px; border:1px solid #FCA5A5; background:#FEF2F2; color:#D32F2F; font-weight:600; cursor:pointer;"
+            style="height:46px; border-radius:8px; border:1px solid #FCA5A5; background:#FEF2F2; color:#D32F2F; font-weight:600; cursor:pointer;"
             onclick="clearCustomerDue()">Clear Due (Rs. 0)</button>
           <button class="pressable"
-            style="height:44px; border-radius:8px; border:none; background:#1BA63F; color:#FFF; font-weight:600; cursor:pointer;"
+            style="height:46px; border-radius:8px; border:none; background:#1BA63F; color:#FFF; font-weight:600; cursor:pointer;"
             onclick="saveEditedCustomer()">Save Changes</button>
         </div>
       </div>
@@ -1496,30 +1507,32 @@
 
   <script>
     // ============================================================================
-    // SVG ICONS REPOSITORY (Replaces all emojis with exact video vector icons)
+    // MULTI-COLORED VECTOR SVG ICONS (Matches Video 00:02 - 01:06)
     // ============================================================================
     const Icons = {
-      pdfBadge: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><text x="6.5" y="17" fill="currentColor" stroke="none" font-size="6.2" font-weight="800">PDF</text></svg>`,
-      refresh: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M21 12a9 9 0 11-2.64-6.36L21 8"/><polyline points="21 3 21 8 16 8"/></svg>`,
-      cart: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>`,
-      pencil: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4B6A9B" stroke-width="2"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>`,
-      plusCircle: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4B6A9B" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`,
-      cloche: `<svg width="28" height="28" viewBox="0 0 36 36" fill="none"><path d="M18 9C11.9249 9 7 13.9249 7 20H29C29 13.9249 24.0751 9 18 9Z" stroke="#6B7280" stroke-width="1.6"/><path d="M16 6.5H20" stroke="#6B7280" stroke-width="1.6" stroke-linecap="round"/><line x1="5" y1="22.5" x2="31" y2="22.5" stroke="#6B7280" stroke-width="1.6" stroke-linecap="round"/><path d="M7 26L14 25L21 26.5L28 24.5" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round"/></svg>`,
-      phone: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>`,
-      cardDue: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>`,
-      trendUp: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1BA63F" stroke-width="2.2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`,
-      cashNote: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1BA63F" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 12h.01M18 12h.01"/></svg>`,
-      tagRed: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>`,
-      cartBlue: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>`,
-      trendPink: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#EC4899" stroke-width="2.2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`,
-      mobileBlue: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>`,
-      walletPurple: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2"><path d="M20 12V8H6a2 2 0 01-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 00-2 2c0 1.1.9 2 2 2h4v-4h-4z"/></svg>`,
-      bankYellow: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><polygon points="12 2 2 7 22 7 12 2"/><line x1="6" y1="7" x2="6" y2="17"/><line x1="10" y1="7" x2="10" y2="17"/><line x1="14" y1="7" x2="14" y2="17"/><line x1="18" y1="7" x2="18" y2="17"/><rect x="2" y="17" width="20" height="3"/></svg>`
+      pdfBadge: `<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><text x="6" y="17" fill="currentColor" stroke="none" font-size="6.3" font-weight="800">PDF</text></svg>`,
+      refresh: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M21 12a9 9 0 11-2.64-6.36L21 8"/><polyline points="21 3 21 8 16 8"/></svg>`,
+      cart: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>`,
+      pencil: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#4B6A9B" stroke-width="2"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>`,
+      plusCircle: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#4B6A9B" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`,
+      cloche: `<svg width="32" height="32" viewBox="0 0 36 36" fill="none"><path d="M18 9C11.9249 9 7 13.9249 7 20H29C29 13.9249 24.0751 9 18 9Z" stroke="#6B7280" stroke-width="1.7"/><path d="M16 6.5H20" stroke="#6B7280" stroke-width="1.7" stroke-linecap="round"/><line x1="5" y1="22.5" x2="31" y2="22.5" stroke="#6B7280" stroke-width="1.7" stroke-linecap="round"/><path d="M7 26L14 25L21 26.5L28 24.5" stroke="#6B7280" stroke-width="1.6" stroke-linecap="round"/></svg>`,
+      phone: `<svg width="13.5" height="13.5" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>`,
+      cardDue: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>`,
+      trendUp: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#1BA63F" stroke-width="2.3"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`,
+      cashNote: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#DCFCE7" stroke="#1BA63F" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg>`,
+      tagRed: `<svg width="19" height="19" viewBox="0 0 24 24" fill="#FEE2E2" stroke="#EF4444" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>`,
+      cartBlue: `<svg width="19" height="19" viewBox="0 0 24 24" fill="#DBEAFE" stroke="#2563EB" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>`,
+      trendPink: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#EC4899" stroke-width="2.3"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`,
+      mobileBlue: `<svg width="19" height="19" viewBox="0 0 24 24" fill="#DBEAFE" stroke="#2563EB" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>`,
+      walletPurple: `<svg width="19" height="19" viewBox="0 0 24 24" fill="#F3E8FF" stroke="#7C3AED" stroke-width="2"><path d="M20 12V8H6a2 2 0 01-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 00-2 2c0 1.1.9 2 2 2h4v-4h-4z"/></svg>`,
+      bankYellow: `<svg width="19" height="19" viewBox="0 0 24 24" fill="#FEF3C7" stroke="#D97706" stroke-width="2"><polygon points="12 2 2 7 22 7 12 2"/><line x1="6" y1="7" x2="6" y2="17"/><line x1="10" y1="7" x2="10" y2="17"/><line x1="14" y1="7" x2="14" y2="17"/><line x1="18" y1="7" x2="18" y2="17"/><rect x="2" y="17" width="20" height="3"/></svg>`,
+      creditBlueCard: `<svg width="19" height="19" viewBox="0 0 24 24" fill="#DBEAFE" stroke="#2563EB" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>`,
+      pastDuesOrange: `<svg width="19" height="19" viewBox="0 0 24 24" fill="#FFEDD5" stroke="#EA580C" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/></svg>`,
+      folderYellow: `<svg width="19" height="19" viewBox="0 0 24 24" fill="#FEF3C7" stroke="#D97706" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>`,
+      diagArrow: `<svg class="card-Diag-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>`,
+      bubblesIcon: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#1BA63F" stroke-width="2"><circle cx="7.5" cy="14.5" r="4.5"/><circle cx="16" cy="9" r="3.5"/><circle cx="15.5" cy="17.5" r="2.5"/></svg>`
     };
 
-    // ============================================================================
-    // STATE MANAGEMENT (Persisted in localStorage so your edits never disappear)
-    // ============================================================================
     const defaultState = {
       mainTab: 'bills',
       orderStatusTab: 'Pending',
@@ -1533,7 +1546,7 @@
       activeTableForMenu: 'T2',
       activeMenuCategory: 'Coffee',
       menuQuantities: {},
-      editingMenuItem: null, // { cat, index }
+      editingMenuItem: null,
       selectedTableTheme: 'theme-mint',
       editingCustomerIndex: null,
       creditAccOpen: true,
@@ -1703,12 +1716,11 @@
       }
     };
 
-    // Load saved data from localStorage if available
-    const savedStore = localStorage.getItem('cloud_house_pos_v2');
+    const savedStore = localStorage.getItem('cloud_house_pos_v3');
     const state = savedStore ? { ...defaultState, ...JSON.parse(savedStore) } : defaultState;
 
     function persistState() {
-      localStorage.setItem('cloud_house_pos_v2', JSON.stringify({
+      localStorage.setItem('cloud_house_pos_v3', JSON.stringify({
         orders: state.orders,
         tables: state.tables,
         customers: state.customers,
@@ -1723,7 +1735,7 @@
       document.getElementById('toastText').textContent = msg;
       t.classList.add('show');
       if (toastTimer) clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => t.classList.remove('show'), 1900);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
     }
 
     function closeModals() {
@@ -1754,7 +1766,7 @@
     }
 
     // ============================================================================
-    // 1. BILLS (ORDER HISTORY) — Green Circle Toggle Removed, Working PDF Export
+    // 1. BILLS (ORDER HISTORY)
     // ============================================================================
     function renderBillsScreen(headerEl, mainEl) {
       const showPdfBtn = state.orderStatusTab === 'Completed' || state.orderStatusTab === 'Cancelled';
@@ -1769,7 +1781,7 @@
                 ${Icons.pdfBadge}
               </button>
             ` : ''}
-            <button class="icon-btn pressable" onclick="showToast('Orders Synced'); renderApp();">
+            <button class="icon-btn pressable" onclick="showToast('Orders Refreshed'); renderApp();">
               ${Icons.refresh}
             </button>
           </div>
@@ -1798,14 +1810,14 @@
         subBarHtml = `
         <div class="search-bar-wrap">
           <div class="search-input-box">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2">
               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
             <input type="text" placeholder="Search table..." value="${state.searchQuery}" oninput="handleSearch(this.value)" />
           </div>
           <div class="sort-dropdown pressable">
             <span>By Time</span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
         </div>
       `;
@@ -1820,7 +1832,7 @@
       }
 
       const cardsHtml = filtered.length === 0
-        ? `<div style="height:340px; display:flex; align-items:center; justify-content:center; color:#6B7280; font-size:14.5px;">No orders found</div>`
+        ? `<div style="height:360px; display:flex; align-items:center; justify-content:center; color:#6B7280; font-size:15px;">No orders found</div>`
         : filtered.map(order => {
           const rawSubtotal = order.items.reduce((s, i) => s + i.price, 0);
           const orderTotal = Math.max(0, rawSubtotal - (order.discount || 0));
@@ -1832,11 +1844,11 @@
                 <div class="order-header-actions">
                   ${isPending ? `
                     <button class="circle-plus-btn pressable" onclick="openMenuForTable('${order.table}')" title="Add more items">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                     </button>
                   ` : ''}
                   <button class="dots-menu-btn" onclick="event.stopPropagation(); state.openPopoverOrderId = state.openPopoverOrderId === '${order.id}' ? null : '${order.id}'; renderApp();">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#6B7280"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#6B7280"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
                   </button>
                 </div>
               </div>
@@ -1864,7 +1876,7 @@
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                   </button>
                 ` : `
-                  <div style="font-size:12px; color:#1BA63F; font-weight:600;">${order.paymentMethod || 'Cash'}</div>
+                  <div></div>
                   <div class="order-time-label">${order.time}</div>
                   <div class="order-total-label">Rs. ${orderTotal}</div>
                 `}
@@ -1895,7 +1907,7 @@
     }
 
     // ============================================================================
-    // 2. ORDER DETAILS & CHECKOUT MODAL (Discount + Cash / Fonepay / eSewa / Credit)
+    // 2. ORDER DETAILS & CHECKOUT MODAL (Video 01:03-01:06)
     // ============================================================================
     function openOrderDetailsModal(orderId) {
       state.openPopoverOrderId = null;
@@ -1921,56 +1933,72 @@
         { id: 'Cash', label: 'Cash', svg: Icons.cashNote },
         { id: 'Fonepay', label: 'Fonepay QR', svg: Icons.mobileBlue },
         { id: 'eSewa', label: 'eSewa / Wallet', svg: Icons.walletPurple },
-        { id: 'Credit', label: 'Customer Credit', svg: Icons.cardDue }
+        { id: 'Credit', label: 'Customer Credit', svg: Icons.creditBlueCard }
       ];
 
       bodyEl.innerHTML = `
       <div style="background:#F9FAFB; border:1px solid #F0F1F3; border-radius:10px; padding:12px; margin-bottom:10px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
           <div style="display:flex; align-items:center; gap:10px;">
-            <div style="width:32px; height:32px; border-radius:8px; background:#E8F7EC; display:flex; align-items:center; justify-content:center; color:#1BA63F; font-weight:700;">#</div>
+            <div style="width:34px; height:34px; border-radius:8px; background:#E8F7EC; display:flex; align-items:center; justify-content:center; color:#1BA63F; font-weight:700;">#</div>
             <div>
-              <div style="font-size:11.5px; color:#6B7280;">Order ID</div>
-              <div style="font-size:15px; font-weight:700; color:#1F2937;">${ord.id}</div>
+              <div style="font-size:12px; color:#6B7280;">Order ID</div>
+              <div style="font-size:15.5px; font-weight:700; color:#1F2937;">${ord.id}</div>
             </div>
           </div>
-          <span style="background:#FFF3E0; color:#F57C00; font-size:11px; font-weight:700; padding:4px 8px; border-radius:6px;">${ord.status.toUpperCase()}</span>
+          <span style="background:#FFF3E0; color:#F57C00; font-size:11.5px; font-weight:700; padding:4px 9px; border-radius:6px;">${ord.status.toUpperCase()}</span>
         </div>
-        <div style="border-top:1px solid #ECEEF0; padding-top:8px; font-size:12.5px; color:#6B7280;">
-          Created at <strong style="color:#374151;">08 Oct, ${ord.time}</strong> • Table: <strong style="color:#374151;">${ord.table}</strong> • Taken By: <strong style="color:#374151;">${ord.takenBy}</strong>
+        <div style="border-top:1px solid #ECEEF0; padding-top:8px; font-size:13px; color:#6B7280;">
+          Created at <strong style="color:#374151;">08 Oct, ${ord.time}</strong>
         </div>
       </div>
 
-      <div style="display:flex; justify-content:space-between; align-items:center; margin:10px 0 6px;">
-        <span style="font-size:13.5px; font-weight:700; color:#374151;">Order Items (${ord.items.length} Items)</span>
-        <span style="font-size:12px; color:#6B7280;">History</span>
+      <div style="border:1px solid #ECEEF0; border-radius:8px; padding:10px 12px; font-size:14px; color:#4B5563; margin-bottom:8px;">
+        Table : <strong style="color:#1F2937;">${ord.table}</strong>
+      </div>
+
+      <div style="border:1px solid #ECEEF0; border-radius:8px; padding:10px 12px; font-size:14px; color:#4B5563; margin-bottom:10px;">
+        Taken By : <strong style="color:#1F2937;">${ord.takenBy || 'Dipak'}</strong>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin:12px 0 8px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:14.5px; font-weight:700; color:#374151;">Order Items</span>
+          <span style="background:#E8F7EC; color:#1BA63F; font-size:12px; font-weight:600; padding:2px 8px; border-radius:6px;">${ord.items.length} Items</span>
+        </div>
+        <span style="font-size:12.5px; color:#6B7280;">History ⓘ</span>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1.6fr 0.5fr 1fr; padding:8px 6px; background:#F9FAFB; font-size:12.5px; font-weight:600; color:#6B7280; border-radius:6px;">
+        <span>Item</span><span style="text-align:center;">Qty</span><span style="text-align:right;">Total</span>
       </div>
 
       ${ord.items.map(it => `
-        <div style="display:grid; grid-template-columns:1.6fr 0.5fr 1fr; padding:8px 4px; border-bottom:1px solid #F3F4F6; font-size:13.5px; align-items:center;">
+        <div style="display:grid; grid-template-columns:1.6fr 0.5fr 1fr; padding:10px 6px; border-bottom:1px solid #F3F4F6; font-size:14px; align-items:center;">
           <span style="color:#374151;">${it.name}</span>
-          <span style="background:#F3F4F6; padding:2px 8px; border-radius:6px; font-size:12px; text-align:center; width:fit-content; margin:0 auto;">${it.qty}</span>
+          <span style="background:#F3F4F6; padding:2px 9px; border-radius:6px; font-size:13px; text-align:center; width:fit-content; margin:0 auto;">${it.qty}</span>
           <span style="text-align:right; font-weight:600;">Rs. ${it.price.toFixed(2)}</span>
         </div>
       `).join('')}
 
       ${ord.status === 'Pending' ? `
-        <!-- Discount Input Box -->
-        <div style="margin-top:12px; display:flex; align-items:center; justify-content:space-between; gap:10px; background:#F9FAFB; padding:8px 12px; border-radius:8px; border:1px solid #E5E7EB;">
-          <span style="font-size:13px; font-weight:600; color:#374151;">Discount (Rs.)</span>
+        <div style="margin-top:12px; display:flex; align-items:center; justify-content:space-between; gap:10px; background:#F9FAFB; padding:9px 12px; border-radius:8px; border:1px solid #E5E7EB;">
+          <span style="font-size:13.5px; font-weight:600; color:#374151;">Discount (Rs.)</span>
           <input type="number" min="0" max="${subtotal}" value="${discount}"
                  oninput="state.checkoutDiscount = this.value; updateCheckoutTotalsUI(${subtotal});"
-                 style="width:100px; height:34px; border:1px solid #D1D5DB; border-radius:6px; padding:0 8px; text-align:right; font-size:14px; font-weight:600; outline:none;" />
+                 style="width:110px; height:36px; border:1px solid #D1D5DB; border-radius:6px; padding:0 10px; text-align:right; font-size:14.5px; font-weight:600; outline:none;" />
         </div>
       ` : ''}
 
       <div style="background:#F9FAFB; border-radius:8px; padding:10px 12px; margin-top:10px;">
-        <div style="display:flex; justify-content:space-between; font-size:13px; color:#6B7280;">
+        <div style="display:flex; justify-content:space-between; font-size:13.5px; color:#6B7280;">
           <span>Subtotal</span><span>Rs. ${subtotal.toFixed(2)}</span>
         </div>
-        <div style="display:flex; justify-content:space-between; font-size:13px; color:#EF4444; margin-top:4px;">
-          <span>Discount</span><span id="liveDiscountText">- Rs. ${discount.toFixed(2)}</span>
-        </div>
+        ${discount > 0 || ord.status === 'Pending' ? `
+          <div style="display:flex; justify-content:space-between; font-size:13.5px; color:#EF4444; margin-top:4px;">
+            <span>Discount</span><span id="liveDiscountText">- Rs. ${discount.toFixed(2)}</span>
+          </div>
+        ` : ''}
         <div style="display:flex; justify-content:space-between; font-size:15px; font-weight:700; color:#1F2937; margin-top:6px; padding-top:6px; border-top:1px solid #E5E7EB;">
           <span>Total Amount</span><span id="liveFinalTotalText">Rs. ${finalTotal.toFixed(2)}</span>
         </div>
@@ -1978,7 +2006,7 @@
 
       ${ord.status === 'Pending' ? `
         <div style="margin-top:12px;">
-          <div style="font-size:12.5px; font-weight:600; color:#4B5563;">Select Payment Method</div>
+          <div style="font-size:13px; font-weight:600; color:#4B5563;">Payment Collection Method</div>
           <div class="pay-methods-grid">
             ${methods.map(m => `
               <div class="pay-method-card pressable ${state.checkoutPaymentMethod === m.id ? 'selected' : ''}"
@@ -1992,9 +2020,9 @@
 
         ${state.checkoutPaymentMethod === 'Credit' ? `
           <div style="margin-top:10px;">
-            <label style="font-size:12px; font-weight:600; color:#D32F2F;">Add Due to Customer Account:</label>
-            <select class="form-select" style="height:38px; margin-top:4px;" onchange="state.checkoutCustomerForCredit = this.value">
-              ${state.customers.map(c => `<option value="${c.name}" ${c.name === state.checkoutCustomerForCredit ? 'selected' : ''}>${c.name} (Current Due: Rs.${c.due})</option>`).join('')}
+            <label style="font-size:12.5px; font-weight:600; color:#D32F2F;">Assign Credit Due To Customer:</label>
+            <select class="form-select" style="height:40px; margin-top:4px;" onchange="state.checkoutCustomerForCredit = this.value">
+              ${state.customers.map(c => `<option value="${c.name}" ${c.name === state.checkoutCustomerForCredit ? 'selected' : ''}>${c.name} (Due: Rs.${c.due})</option>`).join('')}
             </select>
           </div>
         ` : ''}
@@ -2002,12 +2030,12 @@
     `;
 
       footerEl.innerHTML = ord.status === 'Pending' ? `
-      <button class="pressable" style="height:44px; border-radius:8px; border:1px solid #D1D5DB; background:#FFF; font-weight:600; color:#4B5563; cursor:pointer;"
+      <button class="pressable" style="height:46px; border-radius:8px; border:1px solid #D1D5DB; background:#FFF; font-size:14.5px; font-weight:600; color:#4B5563; cursor:pointer;"
               onclick="cancelOrder('${ord.id}')">Cancel Order</button>
-      <button class="pressable" style="height:44px; border-radius:8px; border:none; background:#1BA63F; color:#FFF; font-weight:600; cursor:pointer;"
-              onclick="completeCheckout('${ord.id}')">Checkout (${state.checkoutPaymentMethod})</button>
+      <button class="pressable" style="height:46px; border-radius:8px; border:none; background:#1BA63F; color:#FFF; font-size:14.5px; font-weight:600; cursor:pointer;"
+              onclick="completeCheckout('${ord.id}')">Checkout</button>
     ` : `
-      <button class="pressable" style="grid-column:span 2; height:44px; border-radius:8px; border:none; background:#1BA63F; color:#FFF; font-weight:600; cursor:pointer;"
+      <button class="pressable" style="grid-column:span 2; height:46px; border-radius:8px; border:none; background:#1BA63F; color:#FFF; font-size:14.5px; font-weight:600; cursor:pointer;"
               onclick="closeModals()">Close</button>
     `;
     }
@@ -2032,15 +2060,12 @@
         ord.discount = disc;
         ord.paymentMethod = state.checkoutPaymentMethod;
 
-        // If paid via Customer Credit, automatically add to Customer's Total Due!
         if (state.checkoutPaymentMethod === 'Credit') {
           const cust = state.customers.find(c => c.name === state.checkoutCustomerForCredit);
-          if (cust) {
-            cust.due = (parseFloat(cust.due) || 0) + finalAmt;
-          }
+          if (cust) cust.due = (parseFloat(cust.due) || 0) + finalAmt;
         }
         persistState();
-        showToast(`${ord.id} Completed via ${state.checkoutPaymentMethod}`);
+        showToast(`${ord.id} Paid via ${state.checkoutPaymentMethod}`);
       }
       closeModals();
       renderApp();
@@ -2068,7 +2093,7 @@
           <div class="header-title">Manage Orders</div>
           <div class="header-actions">
             <button class="header-action-pill pressable" onclick="openAddTableModal()">+ Table</button>
-            <button class="header-action-pill pressable" onclick="openMenuForTable('Walk-in')">Menu</button>
+            <button class="icon-btn pressable" onclick="renderApp()">${Icons.refresh}</button>
           </div>
         </div>
       </div>
@@ -2080,7 +2105,7 @@
       mainEl.innerHTML = `
       <div class="search-bar-wrap">
         <div class="search-input-box">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" placeholder="Search table..." value="${state.searchQuery}" oninput="handleSearch(this.value)" />
         </div>
       </div>
@@ -2097,8 +2122,8 @@
                   <div class="order-count-row">${Icons.cart}<span class="order-count-badge">${count} Order</span></div>
                   <div class="table-active-price">Rs. ${total.toFixed(2)}</div>
                   <div class="table-action-row">
-                    <button class="table-svg-btn" onclick="event.stopPropagation(); openOrderDetailsModal('${pendingOrders[0].id}')" title="Edit Order">${Icons.pencil}</button>
-                    <button class="table-svg-btn" onclick="event.stopPropagation(); openMenuForTable('${t.name}')" title="Add Items">${Icons.plusCircle}</button>
+                    <button class="table-svg-btn" onclick="event.stopPropagation(); openOrderDetailsModal('${pendingOrders[0].id}')">${Icons.pencil}</button>
+                    <button class="table-svg-btn" onclick="event.stopPropagation(); openMenuForTable('${t.name}')">${Icons.plusCircle}</button>
                   </div>
                 </div>
               </div>
@@ -2116,7 +2141,6 @@
             `;
       }).join('')}
 
-          <!-- Add Table Canvas Tile directly inside Grid -->
           <div class="add-table-tile pressable" onclick="openAddTableModal()">
             ${Icons.plusCircle}
             <span>+ Add Table</span>
@@ -2148,19 +2172,16 @@
 
     function saveNewTable() {
       const name = document.getElementById('newTableNameInput').value.trim();
-      if (!name) {
-        showToast('Enter a table name');
-        return;
-      }
+      if (!name) { showToast('Enter a table name'); return; }
       state.tables.push({ name, theme: state.selectedTableTheme });
       persistState();
       closeModals();
-      showToast(`Table "${name}" added`);
+      showToast(`Table "${name}" created`);
       renderApp();
     }
 
     // ============================================================================
-    // 4. RESTAURANT MENU (View, Add Item, and Tap-to-Edit Item Name/Price)
+    // 4. RESTAURANT MENU (View, Add, Edit Items)
     // ============================================================================
     function openMenuForTable(tableName) {
       state.activeTableForMenu = tableName;
@@ -2177,12 +2198,12 @@
             <button class="icon-btn pressable" onclick="switchMainTab('takeOrder')">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="15 18 9 12 15 6"/></svg>
             </button>
-            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
               <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM18 18h3v3h-3z"/>
             </svg>
           </div>
           <div class="header-title">Restaurant Menu</div>
-          <button class="header-action-pill pressable" onclick="openMenuModal(null)">+ Add Item</button>
+          <button class="header-action-pill pressable" onclick="openMenuModal(null)">+ Add</button>
         </div>
       </div>
       <div class="menu-categories-strip">
@@ -2216,7 +2237,7 @@
                 <div>
                   <div class="menu-item-title">
                     <span>${item.name}</span>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
                   </div>
                   <div class="menu-item-price">Rs. ${item.price}</div>
                 </div>
@@ -2233,10 +2254,10 @@
       ${selectedCount > 0 ? `
         <div class="menu-cart-bar pressable" onclick="placeOrderFromMenu()">
           <div>
-            <div style="font-size:12px; opacity:0.92;">Table: ${state.activeTableForMenu} •${selectedCount} items</div>
-            <div style="font-size:15.5px; font-weight:700;">Rs. ${selectedTotal.toFixed(2)}</div>
+            <div style="font-size:12.5px; opacity:0.92;">Table: ${state.activeTableForMenu} •${selectedCount} items</div>
+            <div style="font-size:16px; font-weight:700;">Rs. ${selectedTotal.toFixed(2)}</div>
           </div>
-          <div style="font-weight:700; font-size:14.5px;">Save Order →</div>
+          <div style="font-weight:700; font-size:15px;">Save Order →</div>
         </div>
       ` : ''}
     `;
@@ -2262,9 +2283,9 @@
         document.getElementById('menuModalName').value = item.name;
         document.getElementById('menuModalPrice').value = item.price;
         footer.innerHTML = `
-        <button class="pressable" style="height:44px; border-radius:8px; border:1px solid #FCA5A5; background:#FEF2F2; color:#D32F2F; font-weight:600; cursor:pointer;"
+        <button class="pressable" style="height:46px; border-radius:8px; border:1px solid #FCA5A5; background:#FEF2F2; color:#D32F2F; font-weight:600; cursor:pointer;"
                 onclick="deleteMenuItem()">Delete Item</button>
-        <button class="pressable" style="height:44px; border-radius:8px; border:none; background:#1BA63F; color:#FFF; font-weight:600; cursor:pointer;"
+        <button class="pressable" style="height:46px; border-radius:8px; border:none; background:#1BA63F; color:#FFF; font-weight:600; cursor:pointer;"
                 onclick="saveMenuModalItem()">Update Item</button>
       `;
       } else {
@@ -2272,7 +2293,7 @@
         document.getElementById('menuModalName').value = '';
         document.getElementById('menuModalPrice').value = '';
         footer.innerHTML = `
-        <button class="pressable" style="grid-column:span 2; height:44px; border-radius:8px; border:none; background:#1BA63F; color:#FFF; font-weight:600; cursor:pointer;"
+        <button class="pressable" style="grid-column:span 2; height:46px; border-radius:8px; border:none; background:#1BA63F; color:#FFF; font-weight:600; cursor:pointer;"
                 onclick="saveMenuModalItem()">Save to Menu</button>
       `;
       }
@@ -2354,7 +2375,7 @@
     }
 
     // ============================================================================
-    // 5. CUSTOMERS SCREEN (Shows Due Clearly + Tap Customer to Edit Details/Due)
+    // 5. CUSTOMERS SCREEN (Video 00:24-00:27)
     // ============================================================================
     function renderCustomersScreen(headerEl, mainEl) {
       headerEl.innerHTML = `
@@ -2373,7 +2394,7 @@
       mainEl.innerHTML = `
       <div class="search-bar-wrap">
         <div class="search-input-box">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" placeholder="Search by name, phone, address..." value="${state.searchQuery}" oninput="handleSearch(this.value)" />
         </div>
       </div>
@@ -2394,7 +2415,7 @@
         `).join('')}
       </div>
       <button class="fab-add-btn pressable" onclick="switchMainTab('addCustomer')">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </button>
     `;
     }
@@ -2429,7 +2450,7 @@
       state.customers[state.editingCustomerIndex].due = 0;
       persistState();
       closeModals();
-      showToast('Customer Due Settled (Rs. 0.00)');
+      showToast('Customer Due Cleared');
       renderApp();
     }
 
@@ -2457,7 +2478,7 @@
           <div class="form-section-header" onclick="state.creditAccOpen=!state.creditAccOpen; renderApp();">
             <span>Credit Information</span><span>${state.creditAccOpen ? '⌃' : '⌄'}</span>
           </div>
-          ${state.creditAccOpen ? `<input class="form-input" id="custCreditInput" type="number" placeholder="Opening Due / Credit (Rs.)" />` : ''}
+          ${state.creditAccOpen ? `<input class="form-input" id="custCreditInput" type="number" placeholder="Credit Limit (Rs.)" />` : ''}
         </div>
         <div class="form-section-card">
           <div class="form-section-header" onclick="state.addressAccOpen=!state.addressAccOpen; renderApp();">
@@ -2466,7 +2487,7 @@
           ${state.addressAccOpen ? `<input class="form-input" id="custAddrInput" type="text" placeholder="Address" />` : ''}
         </div>
       </div>
-      <div style="padding:12px; background:var(--bg-canvas);">
+      <div style="padding:12px 14px calc(var(--safe-bottom) + 12px); background:var(--bg-canvas);">
         <button class="full-green-btn pressable" onclick="saveNewCustomer()">Add Customer</button>
       </div>
     `;
@@ -2485,14 +2506,15 @@
     }
 
     // ============================================================================
-    // 6. ANALYTICS DASHBOARD (100% Clean Vector Icons — No Emojis!)
+    // 6. COMPLETE ANALYTICS DASHBOARD (All 8 Sections from Video 00:31-00:39)
     // ============================================================================
     function renderAnalyticsScreen(headerEl, mainEl) {
       const completedOrders = state.orders.filter(o => o.status === 'Completed');
       const pendingOrders = state.orders.filter(o => o.status === 'Pending');
       const totalRev = completedOrders.reduce((s, o) => s + Math.max(0, o.items.reduce((a, i) => a + i.price, 0) - (o.discount || 0)), 0);
       const totalDisc = completedOrders.reduce((s, o) => s + (o.discount || 0), 0);
-      const avgVal = (completedOrders.length + pendingOrders.length) ? (totalRev / (completedOrders.length + pendingOrders.length)) : 115.42;
+      const totalOrdersCount = completedOrders.length + pendingOrders.length;
+      const avgVal = totalOrdersCount ? (totalRev / totalOrdersCount) : 115.42;
 
       headerEl.innerHTML = `
       <div class="app-header">
@@ -2510,19 +2532,19 @@
 
       mainEl.innerHTML = `
       <div class="screen-body animate-view">
-        <!-- Total Revenue -->
+        <!-- SECTION 1: Total Revenue (00:31) -->
         <div class="analytics-section">
           <div class="analytics-sec-header">
             <div class="analytics-sec-title">${Icons.trendUp}<span>Total Revenue</span></div>
           </div>
           <div class="metric-card-full">
-            <div class="svg-icon-wrap" style="background:#D1FAE5;">${Icons.cashNote}</div>
+            <div class="svg-icon-wrap" style="background:#DCFCE7;">${Icons.cashNote}</div>
             <div class="metric-value">Rs. ${totalRev.toFixed(2)}</div>
             <div class="metric-label">Total Amount</div>
           </div>
           <div class="metric-grid-2">
             <div class="metric-box green-tint">
-              <div style="color:#1BA63F; font-weight:800; font-size:14px; margin-bottom:10px;">Rs</div>
+              <div style="color:#1BA63F; font-weight:800; font-size:15px; margin-bottom:12px;">Rs</div>
               <div class="metric-value">${totalRev.toFixed(2)}</div>
               <div class="metric-label">Net Amount</div>
             </div>
@@ -2533,7 +2555,7 @@
             </div>
             <div class="metric-box blue-tint">
               <div class="svg-icon-wrap">${Icons.cartBlue}</div>
-              <div class="metric-value">${completedOrders.length + pendingOrders.length}</div>
+              <div class="metric-value">${totalOrdersCount}</div>
               <div class="metric-label">Total Orders</div>
             </div>
             <div class="metric-box pink-tint">
@@ -2544,10 +2566,10 @@
           </div>
         </div>
 
-        <!-- Payment Collections -->
+        <!-- SECTION 2: Payment Collections (00:31-00:32) -->
         <div class="analytics-section">
           <div class="analytics-sec-header">
-            <div class="analytics-sec-title">${Icons.cardDue}<span>Payment Collections</span></div>
+            <div class="analytics-sec-title">${Icons.creditBlueCard}<span>Payment Collections</span></div>
           </div>
           <div class="metric-grid-2">
             <div class="metric-box green-tint">
@@ -2573,39 +2595,115 @@
           </div>
         </div>
 
-        <!-- Credit Analytics -->
+        <!-- SECTION 3: Credit Analytics (00:32-00:33) -->
         <div class="analytics-section">
           <div class="analytics-sec-header">
-            <div class="analytics-sec-title">${Icons.cardDue}<span>Credit Analytics</span></div>
+            <div class="analytics-sec-title">${Icons.creditBlueCard}<span>Credit Analytics</span></div>
             <div class="total-sales-pill"><span>Total Sales</span><span>ⓘ</span></div>
           </div>
           <div class="metric-grid-2">
             <div class="metric-box blue-tint">
-              <div class="svg-icon-wrap">${Icons.cardDue}</div>
+              ${Icons.diagArrow}
+              <div class="svg-icon-wrap">${Icons.creditBlueCard}</div>
               <div class="metric-value">Rs. 845.00</div>
               <div class="metric-label">Credit Sales</div>
             </div>
             <div class="metric-box green-tint">
+              ${Icons.diagArrow}
               <div class="svg-icon-wrap">${Icons.cashNote}</div>
               <div class="metric-value">Rs. 6820.00</div>
               <div class="metric-label">Credit Collected</div>
             </div>
             <div class="metric-box purple-tint">
+              ${Icons.diagArrow}
               <div class="svg-icon-wrap">${Icons.tagRed}</div>
               <div class="metric-value">0.0</div>
               <div class="metric-label">Credit Discount</div>
             </div>
             <div class="metric-box yellow-tint">
-              <div class="svg-icon-wrap">${Icons.walletPurple}</div>
+              ${Icons.diagArrow}
+              <div class="svg-icon-wrap">${Icons.pastDuesOrange}</div>
               <div class="metric-value">0.0</div>
               <div class="metric-label">Past Dues</div>
             </div>
           </div>
         </div>
 
-        <!-- Order Status Summary -->
+        <!-- SECTION 4: Credit Collections + Staff Credit Added to Advance (00:33-00:35) -->
         <div class="analytics-section">
-          <div class="analytics-sec-header"><div class="analytics-sec-title"><span>Order Status Summary</span></div></div>
+          <div class="analytics-sec-header">
+            <div class="analytics-sec-title">${Icons.cashNote}<span>Credit Collections</span></div>
+          </div>
+          <div class="metric-grid-2">
+            <div class="metric-box green-tint">
+              <div class="svg-icon-wrap">${Icons.cashNote}</div>
+              <div class="metric-value">Rs. 6820.00</div>
+              <div class="metric-label">Cash</div>
+            </div>
+            <div class="metric-box blue-tint">
+              <div class="svg-icon-wrap">${Icons.mobileBlue}</div>
+              <div class="metric-value">Rs. 0.00</div>
+              <div class="metric-label">Fonepay</div>
+            </div>
+            <div class="metric-box purple-tint">
+              <div class="svg-icon-wrap">${Icons.walletPurple}</div>
+              <div class="metric-value">Rs. 0.00</div>
+              <div class="metric-label">Digital Wallet</div>
+            </div>
+            <div class="metric-box yellow-tint">
+              <div class="svg-icon-wrap">${Icons.bankYellow}</div>
+              <div class="metric-value">Rs. 0.00</div>
+              <div class="metric-label">Bank</div>
+            </div>
+          </div>
+          <div class="metric-box gray-tint" style="margin-top:10px;">
+            ${Icons.diagArrow}
+            <div class="svg-icon-wrap">${Icons.creditBlueCard}</div>
+            <div class="metric-value">Rs. 0.00</div>
+            <div class="metric-label">Staff Credit Added to Advance</div>
+          </div>
+        </div>
+
+        <!-- SECTION 5: Total Collection Summary (00:35) -->
+        <div class="analytics-section">
+          <div class="analytics-sec-header">
+            <div class="analytics-sec-title">${Icons.folderYellow}<span>Total Collection Summary</span></div>
+          </div>
+          <div class="metric-card-full" style="background:#FFFDF2; border-color:#F7F0D4;">
+            ${Icons.diagArrow}
+            <div class="svg-icon-wrap">${Icons.folderYellow}</div>
+            <div class="metric-value">Rs. 7360.00</div>
+            <div class="metric-label">Total Collection</div>
+          </div>
+          <div class="metric-grid-2">
+            <div class="metric-box green-tint">
+              <div class="svg-icon-wrap">${Icons.cashNote}</div>
+              <div class="metric-value">Rs. 7110.00</div>
+              <div class="metric-label">Cash</div>
+            </div>
+            <div class="metric-box blue-tint">
+              <div class="svg-icon-wrap">${Icons.mobileBlue}</div>
+              <div class="metric-value">Rs. 250.00</div>
+              <div class="metric-label">Fonepay</div>
+            </div>
+            <div class="metric-box purple-tint">
+              <div class="svg-icon-wrap">${Icons.walletPurple}</div>
+              <div class="metric-value">Rs. 0.00</div>
+              <div class="metric-label">Digital Wallet</div>
+            </div>
+            <div class="metric-box yellow-tint">
+              <div class="svg-icon-wrap">${Icons.bankYellow}</div>
+              <div class="metric-value">Rs. 0.00</div>
+              <div class="metric-label">Bank</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 6: Order Status Summary & Revenue Analysis (00:36-00:37) -->
+        <div class="analytics-section">
+          <div class="analytics-sec-header">
+            <div class="analytics-sec-title"><span>Order Status Summary</span></div>
+          </div>
           <div class="status-summary-row completed">
             <div class="status-dot-label"><span style="color:#1BA63F;">●</span><span>Completed</span></div>
             <div class="status-badge-circle" style="background:#1BA63F;">${completedOrders.length}</div>
@@ -2614,13 +2712,29 @@
             <div class="status-dot-label"><span style="color:#F59E0B;">●</span><span>Pending</span></div>
             <div class="status-badge-circle" style="background:#F59E0B;">${pendingOrders.length}</div>
           </div>
+
+          <div style="margin-top:16px;">
+            <div style="font-size:15.5px; font-weight:600; color:#374151; margin-bottom:10px;">Revenue Analysis</div>
+            <div style="display:flex; justify-content:space-between; padding:9px 12px; background:#F9FAFB; font-size:13px; font-weight:600; color:#6B7280; border-radius:6px;">
+              <span>Date</span><span>Revenue</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:12px 12px; font-size:14px; color:#374151; border-bottom:1px solid #F3F4F6;">
+              <span>Oct 08, 2026</span><span style="font-weight:600;">Rs. ${totalRev.toFixed(2)}</span>
+            </div>
+          </div>
         </div>
 
-        <!-- Top Categories -->
+        <!-- SECTION 7: Top Categories (00:37-00:38) -->
         <div class="analytics-section">
           <div class="analytics-sec-header">
-            <div class="analytics-sec-title"><span>Top Categories</span></div>
-            <div class="top-toggle-wrap"><button class="top-toggle-btn active">Top</button><button class="top-toggle-btn">Non</button></div>
+            <div class="analytics-sec-title">${Icons.bubblesIcon}<span>Top Categories</span></div>
+            <div class="top-toggle-wrap">
+              <div class="top-pill-group">
+                <button class="top-toggle-btn active">Top</button>
+                <button class="top-toggle-btn">Non</button>
+              </div>
+              <span style="color:#6B7280; font-size:16px;">→</span>
+            </div>
           </div>
           ${[
           { rank: 1, name: 'Smoke', rev: '300.00', sold: '13 sold', cls: 'rank-1' },
@@ -2632,18 +2746,24 @@
             <div class="rank-item-row">
               <div class="rank-left">
                 <div class="rank-num-box ${c.cls}">${c.rank}</div>
-                <div><div style="font-size:14px; font-weight:600;">${c.name}</div><div style="font-size:12px; color:#6B7280;">Revenue: Rs.${c.rev}</div></div>
+                <div><div style="font-size:14.5px; font-weight:600;">${c.name}</div><div style="font-size:12.5px; color:#6B7280;">Revenue: Rs.${c.rev}</div></div>
               </div>
               <span class="sold-pill">${c.sold}</span>
             </div>
           `).join('')}
         </div>
 
-        <!-- Top Sellings -->
+        <!-- SECTION 8: Top Sellings (00:38-00:39) -->
         <div class="analytics-section">
           <div class="analytics-sec-header">
             <div class="analytics-sec-title">${Icons.trendUp}<span>Top Sellings</span></div>
-            <div class="top-toggle-wrap"><button class="top-toggle-btn active">Top</button><button class="top-toggle-btn">Non</button></div>
+            <div class="top-toggle-wrap">
+              <div class="top-pill-group">
+                <button class="top-toggle-btn active">Top</button>
+                <button class="top-toggle-btn">Non</button>
+              </div>
+              <span style="color:#6B7280; font-size:16px;">→</span>
+            </div>
           </div>
           ${[
           { rank: 1, name: 'Surya Rad', rev: '200.00', sold: '8 sold', cls: 'rank-1' },
@@ -2655,7 +2775,7 @@
             <div class="rank-item-row">
               <div class="rank-left">
                 <div class="rank-num-box ${item.cls}">${item.rank}</div>
-                <div><div style="font-size:14px; font-weight:600;">${item.name}</div><div style="font-size:12px; color:#6B7280;">Revenue: Rs.${item.rev}</div></div>
+                <div><div style="font-size:14.5px; font-weight:600;">${item.name}</div><div style="font-size:12.5px; color:#6B7280;">Revenue: Rs.${item.rev}</div></div>
               </div>
               <span class="sold-pill">${item.sold}</span>
             </div>
@@ -2666,7 +2786,7 @@
     }
 
     // ============================================================================
-    // 7. WORKING REAL PDF DOWNLOADS (Uses jsPDF to save .pdf directly on phone)
+    // 7. REAL PDF DOWNLOADS
     // ============================================================================
     function downloadOrderHistoryPDF() {
       if (!window.jspdf) { window.print(); return; }
@@ -2686,7 +2806,7 @@
         y += 6;
         doc.setFont(undefined, 'normal');
         o.items.forEach(it => {
-          doc.text(`   • ${it.name} x${it.qty} = Rs. ${it.price.toFixed(2)}`, 14, y);
+          doc.text(`   - ${it.name} x${it.qty} = Rs. ${it.price.toFixed(2)}`, 14, y);
           y += 6;
         });
         y += 4;
@@ -2735,17 +2855,19 @@
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
       doc.setFontSize(16);
-      doc.text('Cloud House Cafe - Analytics Report', 14, 20);
+      doc.text('Cloud House Cafe - Analytics Dashboard Report', 14, 20);
       doc.setFontSize(11);
       doc.text('Date: Oct 08, 2026 | Owner: ' + state.ownerUser.name, 14, 28);
       doc.text('Total Revenue: Rs. 1385.00 | Total Orders: 12 | Avg Order Value: Rs. 115.42', 14, 38);
-      doc.text('Cash Collection: Rs. 7110.00 | Fonepay: Rs. 250.00 | Credit Collected: Rs. 6820.00', 14, 46);
+      doc.text('Payment Collections -> Cash: Rs. 290.00 | Fonepay: Rs. 250.00', 14, 46);
+      doc.text('Credit Analytics -> Credit Sales: Rs. 845.00 | Credit Collected: Rs. 6820.00', 14, 54);
+      doc.text('Total Collection Summary -> Rs. 7360.00 (Cash: Rs. 7110.00, Fonepay: Rs. 250.00)', 14, 62);
       doc.save('Cloud-House-Analytics-Report.pdf');
       showToast('Downloaded Analytics PDF');
     }
 
     // ============================================================================
-    // 8. WORKING OWNER GOOGLE & EMAIL LOGIN MODAL
+    // 8. WORKING OWNER GOOGLE LOGIN
     // ============================================================================
     function openOwnerLoginModal() {
       const bodyEl = document.getElementById('ownerLoginBody');
@@ -2756,9 +2878,9 @@
             ${state.ownerUser.initial}
           </div>
           <div>
-            <div style="font-size:15.5px; font-weight:700; color:#1F2937;">${state.ownerUser.name}</div>
-            <div style="font-size:13px; color:#6B7280;">${state.ownerUser.email}</div>
-            <span style="display:inline-block; margin-top:4px; background:#E8F7EC; color:#1BA63F; font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px;">
+            <div style="font-size:16px; font-weight:700; color:#1F2937;">${state.ownerUser.name}</div>
+            <div style="font-size:13.5px; color:#6B7280;">${state.ownerUser.email}</div>
+            <span style="display:inline-block; margin-top:4px; background:#E8F7EC; color:#1BA63F; font-size:11.5px; font-weight:700; padding:2px 8px; border-radius:6px;">
               Owner Account Active
             </span>
           </div>
@@ -2771,11 +2893,11 @@
       } else {
         bodyEl.innerHTML = `
         <div style="margin-bottom:12px;">
-          <label style="font-size:12px; font-weight:600; color:#4B5563;">Owner Name</label>
+          <label style="font-size:13px; font-weight:600; color:#4B5563;">Owner Name</label>
           <input class="form-input" id="loginOwnerName" type="text" value="Sanjeev Yadav" />
         </div>
         <div style="margin-bottom:14px;">
-          <label style="font-size:12px; font-weight:600; color:#4B5563;">Owner Google Email</label>
+          <label style="font-size:13px; font-weight:600; color:#4B5563;">Owner Google Email</label>
           <input class="form-input" id="loginOwnerEmail" type="email" value="owner@cloudhouse.com.np" />
         </div>
         <button class="full-green-btn pressable" onclick="completeOwnerLogin()">
@@ -2798,7 +2920,13 @@
       persistState();
       closeModals();
       renderApp();
-      showToast(`Welcome back, ${name}`);
+      showToast(`Welcome, ${name}`);
+    }
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => { });
+      });
     }
 
     renderApp();
