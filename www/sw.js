@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cloud-house-pos-v3';
+const CACHE_NAME = 'cloud-house-pos-v4';
 const ASSETS = ['/index.html', '/manifest.json', '/logo.svg'];
 
 self.addEventListener('install', (event) => {
