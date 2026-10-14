@@ -10,9 +10,9 @@
   <meta name="msapplication-navbutton-color" content="#1BA63F" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="manifest" href="/manifest.json" />
-  <link rel="icon" type="image/svg+xml" href="/logo.svg" />
-  <link rel="apple-touch-icon" href="/logo.svg" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" href="icon.png" />
+  <link rel="apple-touch-icon" href="icon.png" />
   <title>Cloud House POS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -177,6 +177,7 @@
       align-items: center;
       justify-content: center;
       box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+      overflow: hidden;
     }
 
     .auth-card {
@@ -207,6 +208,7 @@
       font-weight: 600;
       color: #6B7280;
       cursor: pointer;
+      transition: all 0.15s ease;
     }
 
     .auth-mode-tab.active {
@@ -215,39 +217,11 @@
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
     }
 
-    /* Integrated Green Status Bar Strip (Time & Battery like Video 00:02) */
-    .green-status-strip {
-      background: var(--green-primary);
-      color: #FFFFFF;
-      padding: calc(var(--safe-top) + 4px) 18px 2px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 13px;
-      font-weight: 600;
-      flex-shrink: 0;
-    }
-
-    .status-icons-right {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .battery-green-pill {
-      background: #34C759;
-      color: #FFFFFF;
-      font-size: 10.5px;
-      font-weight: 800;
-      padding: 1px 6px;
-      border-radius: 5px;
-    }
-
-    /* Top App Header */
+    /* Top App Header (Native safe area padding) */
     .app-header {
       background: var(--green-primary);
       color: #FFFFFF;
-      padding: 6px 14px 10px;
+      padding: calc(var(--safe-top) + 8px) 14px 10px;
       flex-shrink: 0;
       z-index: 20;
     }
@@ -260,13 +234,14 @@
     }
 
     .date-pill {
-      background: rgba(255, 255, 255, 0.22);
+      background: var(--orange-active);
       color: #FFFFFF;
       font-size: 13.5px;
-      font-weight: 600;
+      font-weight: 700;
       padding: 5px 13px;
       border-radius: 18px;
       cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
     }
 
     .header-title {
@@ -1433,24 +1408,6 @@
     <!-- FIRST-TIME SIGN IN / SIGN UP WITH EMAIL SCREEN -->
     <div id="firstTimeAuthOverlay" style="display:none;"></div>
 
-    <!-- Integrated Green Status Bar (Covers Time & Battery in Green like Video 00:02) -->
-    <div class="green-status-strip">
-      <span id="liveClockText">6:07</span>
-      <div class="status-icons-right">
-        <svg width="14" height="10" viewBox="0 0 15 11" fill="white">
-          <rect x="0" y="7" width="2.5" height="4" rx="0.8" />
-          <rect x="4" y="5" width="2.5" height="6" rx="0.8" />
-          <rect x="8" y="2.5" width="2.5" height="8.5" rx="0.8" />
-          <rect x="12" y="0" width="2.5" height="11" rx="0.8" opacity="0.4" />
-        </svg>
-        <svg width="14" height="10" viewBox="0 0 16 12" fill="white">
-          <path
-            d="M8 9.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm-3.6-1.8a5.5 5.5 0 017.2 0l1.2-1.2a7.2 7.2 0 00-9.6 0l1.2 1.2zm-2.8-2.8a9.5 9.5 0 0112.8 0l1.2-1.2a11.2 11.2 0 00-15.2 0l1.2 1.2z" />
-        </svg>
-        <span class="battery-green-pill">19</span>
-      </div>
-    </div>
-
     <!-- Top App Header -->
     <div id="headerContainer"></div>
 
@@ -1655,8 +1612,7 @@
       <div class="bottom-sheet" onclick="event.stopPropagation()">
         <div class="sheet-header">
           <div class="sheet-header-left">
-            <img src="/logo.svg" alt="Logo" style="width:26px; height:26px; border-radius:6px;"
-              onerror="this.style.display='none'" />
+            <img src="icon.png" alt="Logo" style="width:26px; height:26px; border-radius:6px; object-fit:contain;" />
             <span>Logged In Account</span>
           </div>
           <button onclick="closeModals()"
@@ -1672,7 +1628,7 @@
     // PURPOSE-BUILT VECTOR SVG ICONS
     // ============================================================================
     const Icons = {
-      cloudHouseLogo: `<svg width="56" height="56" viewBox="0 0 512 512"><rect width="512" height="512" rx="115" fill="#1BA63F"/><path d="M168 320h180c36 0 64-26 64-60 0-31-24-56-55-59-8-46-48-81-97-81-44 0-82 29-94 70-33 4-58 32-58 66 0 36 27 64 60 64z" fill="#FFFFFF"/><path d="M214 275h76v42c0 21-17 38-38 38s-38-17-38-38v-42z" fill="#1BA63F"/><path d="M238 252c0-10 10-12 10-22M266 252c0-10 10-12 10-22" fill="none" stroke="#F7931E" stroke-width="12" stroke-linecap="round"/></svg>`,
+      cloudHouseLogo: `<img src="icon.png" alt="Cloud House" style="width:100%; height:100%; border-radius:24px; object-fit:cover;" />`,
       pdfBadge: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><text x="6" y="17" fill="currentColor" stroke="none" font-size="6.3" font-weight="800">PDF</text></svg>`,
       refresh: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M21 12a9 9 0 11-2.64-6.36L21 8"/><polyline points="21 3 21 8 16 8"/></svg>`,
       menuBook: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>`,
@@ -1913,6 +1869,29 @@
     // ============================================================================
     // FIRST-TIME SIGN IN / SIGN UP WITH EMAIL OVERLAY
     // ============================================================================
+    function setAuthMode(mode) {
+      state.authMode = mode;
+      const isSignUp = mode === 'signup';
+      const tabSignIn = document.getElementById('authTabSignIn');
+      const tabSignUp = document.getElementById('authTabSignUp');
+      const nameLabel = document.getElementById('authNameLabel');
+      const submitBtn = document.getElementById('authSubmitBtn');
+      if (tabSignIn && tabSignUp) {
+        tabSignIn.classList.toggle('active', !isSignUp);
+        tabSignUp.classList.toggle('active', isSignUp);
+      }
+      if (nameLabel) {
+        nameLabel.textContent = isSignUp
+          ? 'Your Full Name (Waiter / Owner)'
+          : 'Staff / Owner Name (Shown in Taken By)';
+      }
+      if (submitBtn) {
+        submitBtn.textContent = isSignUp
+          ? 'Create Account & Enter POS'
+          : 'Sign In with Email';
+      }
+    }
+
     function renderFirstTimeAuthOverlay() {
       const overlay = document.getElementById('firstTimeAuthOverlay');
       if (state.ownerUser && state.ownerUser.isLoggedIn) {
@@ -1920,6 +1899,13 @@
         return;
       }
       overlay.style.display = 'block';
+
+      // If already rendered in DOM, smoothly synchronize mode without re-rendering or animation glitch
+      if (document.getElementById('authNameInput')) {
+        setAuthMode(state.authMode || 'signin');
+        return;
+      }
+
       const isSignUp = state.authMode === 'signup';
 
       overlay.innerHTML = `
@@ -1934,22 +1920,17 @@
 
         <div class="auth-card">
           <div class="auth-mode-tabs">
-            <button class="auth-mode-tab ${!isSignUp ? 'active' : ''}" onclick="state.authMode='signin'; renderFirstTimeAuthOverlay();">Sign In</button>
-            <button class="auth-mode-tab ${isSignUp ? 'active' : ''}" onclick="state.authMode='signup'; renderFirstTimeAuthOverlay();">Sign Up</button>
+            <button id="authTabSignIn" type="button" class="auth-mode-tab ${!isSignUp ? 'active' : ''}" onclick="setAuthMode('signin')">Sign In</button>
+            <button id="authTabSignUp" type="button" class="auth-mode-tab ${isSignUp ? 'active' : ''}" onclick="setAuthMode('signup')">Sign Up</button>
           </div>
 
           <form onsubmit="handleEmailAuthSubmit(event)">
-            ${isSignUp ? `
-              <div style="margin-bottom:10px;">
-                <label style="font-size:12.5px; font-weight:600; color:#4B5563;">Your Full Name (Waiter / Owner)</label>
-                <input class="form-input" id="authNameInput" type="text" required placeholder="e.g., Dipak / Sanjeev" value="Dipak" style="margin-top:5px;" />
-              </div>
-            ` : `
-              <div style="margin-bottom:10px;">
-                <label style="font-size:12.5px; font-weight:600; color:#4B5563;">Staff / Owner Name (Shown in Taken By)</label>
-                <input class="form-input" id="authNameInput" type="text" required placeholder="e.g., Dipak / Sanjeev" value="${state.ownerUser.name || 'Dipak'}" style="margin-top:5px;" />
-              </div>
-            `}
+            <div style="margin-bottom:10px;">
+              <label id="authNameLabel" style="font-size:12.5px; font-weight:600; color:#4B5563;">
+                ${isSignUp ? 'Your Full Name (Waiter / Owner)' : 'Staff / Owner Name (Shown in Taken By)'}
+              </label>
+              <input class="form-input" id="authNameInput" type="text" required placeholder="e.g., Dipak / Sanjeev" value="${state.ownerUser.name || 'Dipak'}" style="margin-top:5px;" />
+            </div>
 
             <div style="margin-bottom:10px;">
               <label style="font-size:12.5px; font-weight:600; color:#4B5563;">Email Address</label>
@@ -1961,7 +1942,7 @@
               <input class="form-input" id="authPassInput" type="password" required placeholder="••••••••" value="123456" style="margin-top:5px;" />
             </div>
 
-            <button type="submit" class="full-green-btn pressable">
+            <button type="submit" id="authSubmitBtn" class="full-green-btn pressable">
               ${isSignUp ? 'Create Account & Enter POS' : 'Sign In with Email'}
             </button>
           </form>
@@ -2405,8 +2386,7 @@
       headerEl.innerHTML = `
       <div class="app-header">
         <div class="header-top-row">
-          <div class="date-pill">08 Oct</div>
-          <div class="header-title">Manage Orders</div>
+          <div class="header-title" style="text-align: left; font-size: 20px; font-weight: 700;">Manage Orders</div>
           <div class="header-actions">
             <button class="header-action-pill pressable" onclick="openMenuForTable('T1')" title="View & Edit Restaurant Menu">
               ${Icons.menuBook}
