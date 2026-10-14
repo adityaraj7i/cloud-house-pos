@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Cloud House POS</string>
+    <string name="title_activity_main">Cloud House POS</string>
+    <string name="package_name">np.com.cloudhouse.pos</string>
+    <string name="custom_url_scheme">np.com.cloudhouse.pos</string>
+</resources>

@@ -1,0 +1,8 @@
+{
+    "appId": "np.com.cloudhouse.pos",
+    "appName": "Cloud House POS",
+    "webDir": "www",
+    "server": {
+        "androidScheme": "https"
+    }
+}
