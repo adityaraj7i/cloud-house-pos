@@ -1,5 +1,5 @@
-const CACHE_NAME = 'cloud-house-pos-v6';
-const ASSETS = ['/index.html', '/manifest.json', '/icon.png', '/logo.png'];
+const CACHE_NAME = 'cloud-house-pos-v7';
+const ASSETS = ['/index.html', '/manifest.json', '/icon.png', '/logo.png', '/supabase-config.js'];
 
 self.addEventListener('install', (event) => {
     self.skipWaiting();

@@ -1,55 +1,9 @@
-create extension if not exists "uuid-ossp";
+-- ==============================================================================
+-- CLOUD HOUSE POS — SUPABASE SEED DATA
+-- Run after schema.sql to populate initial cafe tables, menu items, and customers
+-- ==============================================================================
 
--- 1. Cafe Tables (22 Tables & Zones from video)
-create table if not exists public.cafe_tables (
-  id uuid primary key default uuid_generate_v4(),
-  name text not null unique,
-  theme text not null default 'theme-mint',
-  sort_order int not null default 0
-);
-
--- 2. Restaurant Menu Items (10 Categories, 60+ Items from video)
-create table if not exists public.menu_items (
-  id uuid primary key default uuid_generate_v4(),
-  category text not null,
-  name text not null,
-  price numeric(10,2) not null,
-  is_available boolean default true,
-  created_at timestamptz default now()
-);
-
--- 3. Customers & Credit Ledger
-create table if not exists public.customers (
-  id uuid primary key default uuid_generate_v4(),
-  initials text not null,
-  name text not null,
-  phone text,
-  email text,
-  address text,
-  credit_limit numeric(10,2) default 0,
-  total_due numeric(10,2) default 0,
-  color text default '#1BA63F',
-  created_at timestamptz default now()
-);
-
--- 4. Orders (Pending / Completed / Cancelled)
-create table if not exists public.orders (
-  id text primary key,
-  table_name text not null,
-  status text not null default 'Pending',
-  order_time text not null,
-  taken_by text default 'Dipak',
-  payment_method text default 'Cash',
-  items jsonb not null default '[]'::jsonb,
-  created_at timestamptz default now()
-);
-
--- Enable Realtime Sync
-alter publication supabase_realtime add table public.orders;
-alter publication supabase_realtime add table public.menu_items;
-alter publication supabase_realtime add table public.customers;
-
--- Seed Tables
+-- 1. Seed Cafe Tables (22 Tables & Zones)
 insert into public.cafe_tables (name, theme, sort_order) values
   ('T1','theme-mint',1), ('T2','theme-peach',2), ('T3','theme-blue',3), ('T4','theme-pink',4),
   ('T5','theme-mint',5), ('T6','theme-peach',6), ('T7','theme-blue',7), ('T8','theme-pink',8),
@@ -60,7 +14,7 @@ insert into public.cafe_tables (name, theme, sort_order) values
   ('Raj Group','theme-blue',21), ('Bijay','theme-lavender',22)
 on conflict (name) do nothing;
 
--- Seed Menu Items
+-- 2. Seed Restaurant Menu Items (60+ Items across 10 Categories)
 insert into public.menu_items (category, name, price) values
   ('Coffee', 'Black Coffee', 50), ('Coffee', 'Milk', 70), ('Coffee', 'Blackcoffe double', 80),
   ('Coffee', 'Cold coffee', 85), ('Coffee', 'Iced americano', 75), ('Coffee', 'Milk coffee', 55), ('Coffee', 'Water', 20),
@@ -87,4 +41,27 @@ insert into public.menu_items (category, name, price) values
   ('Momo & Noodles', 'V Chawimun Half', 65), ('Momo & Noodles', 'Egg Chawimun', 135),
   ('Momo & Noodles', 'Eg Chawimun Half', 90), ('Momo & Noodles', 'Half Keema Noodles', 100),
   ('Laphing', 'Chau Chau Laphing Dry', 65), ('Laphing', 'Cho Cho Laphing Jhol', 75),
-  ('Laphing', 'Mixed Laphing Dry', 80), ('Laphing', 'Mixed Laphing Jhol', 90);
+  ('Laphing', 'Mixed Laphing Dry', 80), ('Laphing', 'Mixed Laphing Jhol', 90)
+on conflict (category, name) do nothing;
+
+-- 3. Seed Customers & Credit Ledger
+insert into public.customers (initials, name, phone, address, total_due, color) values
+  ('A', 'Ajaya', '9812345678', 'Lalitpur', 0, '#F59E0B'),
+  ('BB', 'Bharat Bhanja', '9866234475', '', 0, '#6366F1'),
+  ('B', 'Bijay', '9845896631', 'Kathmandu', 2790.00, '#22C55E'),
+  ('GS', 'Gyalzan S', '9865741236', '', 0, '#8B5CF6'),
+  ('H', 'Himal', '9846849186', 'Pokhara', 4890.00, '#A855F7'),
+  ('JW', 'Jar Wala', '9866556525', '', 0, '#F97316');
+
+-- 4. Seed Initial Orders
+insert into public.orders (id, table_name, status, order_time, taken_by, payment_method, discount, items) values
+  ('ORD-13211', 'T5', 'Pending', '17:37', 'Dipak', 'Cash', 0, '[{"name": "Regular tea", "qty": 3, "price": 90.00}]'::jsonb),
+  ('ORD-13210', 'T4', 'Pending', '17:19', 'Dipak', 'Cash', 0, '[{"name": "Shikhar ice", "qty": 2, "price": 40.00}, {"name": "Regular tea", "qty": 1, "price": 30.00}]'::jsonb),
+  ('ORD-13209', 'T1', 'Pending', '17:15', 'Dipak', 'Cash', 0, '[{"name": "1 Normal Hookah", "qty": 1, "price": 230.00}]'::jsonb),
+  ('ORD-13208', 'T2', 'Pending', '17:14', 'Dipak', 'Cash', 0, '[{"name": "Regular tea", "qty": 1, "price": 30.00}]'::jsonb),
+  ('ORD-13207', 'T6', 'Pending', '17:09', 'Dipak', 'Cash', 0, '[{"name": "Black Coffee", "qty": 1, "price": 50.00}]'::jsonb),
+  ('ORD-13201', 'T1', 'Completed', '10:28', 'Dipak', 'Cash', 0, '[{"name": "Regular tea", "qty": 2, "price": 60.00}, {"name": "Milk", "qty": 1, "price": 70.00}]'::jsonb),
+  ('ORD-13202', 'T10', 'Completed', '10:28', 'Dipak', 'Cash', 0, '[{"name": "Regular tea", "qty": 1, "price": 30.00}, {"name": "Cookies", "qty": 1, "price": 10.00}]'::jsonb),
+  ('ORD-13203', 'T3', 'Completed', '10:28', 'Dipak', 'Cash', 0, '[{"name": "Regular tea", "qty": 1, "price": 30.00}]'::jsonb),
+  ('ORD-13204', 'T7', 'Completed', '10:28', 'Dipak', 'Cash', 0, '[{"name": "Surya Rad", "qty": 2, "price": 50.00}, {"name": "Regular tea", "qty": 1, "price": 30.00}]'::jsonb)
+on conflict (id) do nothing;

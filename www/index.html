@@ -19,6 +19,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
 
   <style>
     :root {
@@ -1621,6 +1622,39 @@
         <div class="sheet-body" id="ownerLoginBody"></div>
       </div>
     </div>
+    <!-- 7. SUPABASE CLOUD BACKEND SETTINGS MODAL -->
+    <div class="modal-backdrop" id="supabaseSettingsModal" onclick="closeModals()">
+      <div class="bottom-sheet" onclick="event.stopPropagation()">
+        <div class="sheet-header">
+          <div class="sheet-header-left">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1BA63F" stroke-width="2">
+              <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+            </svg>
+            <span>Supabase Cloud Settings</span>
+          </div>
+          <button onclick="closeModals()"
+            style="background:none; border:none; font-size:20px; color:#6B7280; cursor:pointer;">✕</button>
+        </div>
+        <div class="sheet-body">
+          <p style="font-size:13px; color:#6B7280; margin-bottom:14px; line-height:1.4;">
+            Connect your Supabase project for real email authentication, cloud database, and instant multi-device live sync.
+          </p>
+          <div style="margin-bottom:12px;">
+            <label style="font-size:12.5px; font-weight:600; color:#374151;">Supabase Project URL</label>
+            <input class="form-input" id="cfgSupabaseUrl" type="url" placeholder="https://your-project.supabase.co" style="margin-top:5px;" />
+          </div>
+          <div style="margin-bottom:14px;">
+            <label style="font-size:12.5px; font-weight:600; color:#374151;">Supabase Public Anon Key</label>
+            <textarea class="form-input" id="cfgSupabaseAnonKey" rows="3" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." style="margin-top:5px; height:74px; font-family:monospace; font-size:11.5px;"></textarea>
+          </div>
+          <div id="cfgConnectionStatus" style="font-size:13px; font-weight:600; margin-bottom:12px; min-height:18px;"></div>
+          <div style="display:flex; gap:10px;">
+            <button class="pressable" style="flex:1; height:46px; border-radius:8px; border:1.5px solid #D1D5DB; background:#FFF; color:#374151; font-weight:600; cursor:pointer;" onclick="testSupabaseCloudConnection()">Test</button>
+            <button class="pressable" style="flex:2; height:46px; border-radius:8px; border:none; background:#1BA63F; color:#FFF; font-weight:600; cursor:pointer;" onclick="saveSupabaseCloudSettings()">Save & Connect</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -1840,17 +1874,38 @@
       }
     };
 
-    const savedStore = localStorage.getItem('cloud_house_pos_v4');
-    const state = savedStore ? { ...defaultState, ...JSON.parse(savedStore) } : defaultState;
+    let state;
+    try {
+      const savedStore = localStorage.getItem('cloud_house_pos_v4');
+      state = savedStore ? { ...defaultState, ...JSON.parse(savedStore) } : defaultState;
+    } catch (e) {
+      console.warn('Failed to parse saved state, resetting to default:', e);
+      state = defaultState;
+    }
+
+    // Security helper to prevent XSS across the entire application
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
 
     function persistState() {
-      localStorage.setItem('cloud_house_pos_v4', JSON.stringify({
-        orders: state.orders,
-        tables: state.tables,
-        customers: state.customers,
-        menu: state.menu,
-        ownerUser: state.ownerUser
-      }));
+      try {
+        localStorage.setItem('cloud_house_pos_v4', JSON.stringify({
+          orders: state.orders,
+          tables: state.tables,
+          customers: state.customers,
+          menu: state.menu,
+          ownerUser: state.ownerUser
+        }));
+      } catch (e) {
+        console.warn('Failed to persist state:', e);
+      }
     }
 
     let toastTimer = null;
@@ -1876,6 +1931,11 @@
       const tabSignUp = document.getElementById('authTabSignUp');
       const nameLabel = document.getElementById('authNameLabel');
       const submitBtn = document.getElementById('authSubmitBtn');
+      const alertEl = document.getElementById('authStatusAlert');
+      if (alertEl) {
+        alertEl.style.display = 'none';
+        alertEl.textContent = '';
+      }
       if (tabSignIn && tabSignUp) {
         tabSignIn.classList.toggle('active', !isSignUp);
         tabSignUp.classList.toggle('active', isSignUp);
@@ -1890,6 +1950,12 @@
           ? 'Create Account & Enter POS'
           : 'Sign In with Email';
       }
+    }
+
+    function togglePasswordVisibility() {
+      const input = document.getElementById('authPassInput');
+      if (!input) return;
+      input.type = input.type === 'password' ? 'text' : 'password';
     }
 
     function renderFirstTimeAuthOverlay() {
@@ -1907,6 +1973,7 @@
       }
 
       const isSignUp = state.authMode === 'signup';
+      const isCloudReady = window.cloudBackend && window.cloudBackend.isConfigured();
 
       overlay.innerHTML = `
       <div class="auth-screen animate-view">
@@ -1924,22 +1991,32 @@
             <button id="authTabSignUp" type="button" class="auth-mode-tab ${isSignUp ? 'active' : ''}" onclick="setAuthMode('signup')">Sign Up</button>
           </div>
 
+          <!-- Alert for authentication status & errors -->
+          <div id="authStatusAlert" style="display:none; padding:10px 12px; border-radius:8px; background:#FEF2F2; border:1px solid #FCA5A5; color:#DC2626; font-size:12.5px; font-weight:600; margin-bottom:12px;"></div>
+
           <form onsubmit="handleEmailAuthSubmit(event)">
             <div style="margin-bottom:10px;">
               <label id="authNameLabel" style="font-size:12.5px; font-weight:600; color:#4B5563;">
                 ${isSignUp ? 'Your Full Name (Waiter / Owner)' : 'Staff / Owner Name (Shown in Taken By)'}
               </label>
-              <input class="form-input" id="authNameInput" type="text" required placeholder="e.g., Dipak / Sanjeev" value="${state.ownerUser.name || 'Dipak'}" style="margin-top:5px;" />
+              <input class="form-input" id="authNameInput" type="text" required placeholder="e.g., Dipak / Sanjeev" value="${escapeHtml(state.ownerUser.name || 'Dipak')}" style="margin-top:5px;" />
             </div>
 
             <div style="margin-bottom:10px;">
               <label style="font-size:12.5px; font-weight:600; color:#4B5563;">Email Address</label>
-              <input class="form-input" id="authEmailInput" type="email" required placeholder="name@cloudhouse.com.np" value="${state.ownerUser.email || 'dipak@cloudhouse.com.np'}" style="margin-top:5px;" />
+              <input class="form-input" id="authEmailInput" type="email" required placeholder="name@cloudhouse.com.np" value="${escapeHtml(state.ownerUser.email || 'dipak@cloudhouse.com.np')}" style="margin-top:5px;" />
             </div>
 
             <div style="margin-bottom:16px;">
               <label style="font-size:12.5px; font-weight:600; color:#4B5563;">Password</label>
-              <input class="form-input" id="authPassInput" type="password" required placeholder="••••••••" value="123456" style="margin-top:5px;" />
+              <div style="position:relative; margin-top:5px;">
+                <input class="form-input" id="authPassInput" type="password" required placeholder="••••••••" value="123456" style="padding-right:42px;" />
+                <button type="button" onclick="togglePasswordVisibility()" title="Show/Hide Password"
+                        style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; color:#6B7280; font-size:14px; cursor:pointer; padding:4px;">
+                  👁️
+                </button>
+              </div>
+              <span style="display:block; font-size:11px; color:#9CA3AF; margin-top:4px;">Minimum 6 characters</span>
             </div>
 
             <button type="submit" id="authSubmitBtn" class="full-green-btn pressable">
@@ -1963,6 +2040,15 @@
             </svg>
             <span>Continue with Google</span>
           </button>
+
+          <!-- Supabase Cloud Connection Status Badge -->
+          <div style="display:flex; align-items:center; justify-content:center; gap:6px; margin-top:14px; font-size:11.5px; color:#4B5563;">
+            <span style="width:7px; height:7px; border-radius:50%; background:${isCloudReady ? '#22C55E' : '#EAB308'}; display:inline-block;"></span>
+            <span>${isCloudReady ? 'Supabase Cloud Connected' : 'Offline / Local POS Mode'}</span>
+            <button type="button" onclick="openSupabaseSettingsModal()" style="background:none; border:none; color:#1BA63F; font-weight:700; cursor:pointer; text-decoration:underline;">
+              ${isCloudReady ? 'Settings' : 'Connect Cloud'}
+            </button>
+          </div>
         </div>
 
         <div style="text-align:center; color:rgba(255,255,255,0.75); font-size:12px;">
@@ -1972,21 +2058,101 @@
     `;
     }
 
-    function handleEmailAuthSubmit(e) {
+    async function handleEmailAuthSubmit(e) {
       if (e) e.preventDefault();
-      const nameInput = document.getElementById('authNameInput')?.value.trim() || 'Dipak';
-      const emailInput = document.getElementById('authEmailInput')?.value.trim() || 'dipak@cloudhouse.com.np';
+      const isGoogle = (e === null);
+      const nameInput = document.getElementById('authNameInput')?.value.trim() || 'Staff';
+      const emailInput = document.getElementById('authEmailInput')?.value.trim() || '';
+      const passInput = document.getElementById('authPassInput')?.value || '';
+      const alertEl = document.getElementById('authStatusAlert');
+      const submitBtn = document.getElementById('authSubmitBtn');
 
-      state.ownerUser = {
-        isLoggedIn: true,
-        name: nameInput,
-        email: emailInput,
-        initial: nameInput[0].toUpperCase()
-      };
-      persistState();
-      renderFirstTimeAuthOverlay();
-      renderApp();
-      showToast(`Signed in as ${nameInput}`);
+      if (alertEl) {
+        alertEl.style.display = 'none';
+        alertEl.textContent = '';
+      }
+
+      if (!isGoogle) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailInput || !emailRegex.test(emailInput)) {
+          if (alertEl) {
+            alertEl.style.display = 'block';
+            alertEl.textContent = 'Please enter a valid email address.';
+          }
+          return;
+        }
+        if (passInput.length < 6) {
+          if (alertEl) {
+            alertEl.style.display = 'block';
+            alertEl.textContent = 'Password must be at least 6 characters.';
+          }
+          return;
+        }
+      }
+
+      const isSignUp = state.authMode === 'signup';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Connecting...';
+      }
+
+      try {
+        if (window.cloudBackend && window.cloudBackend.isConfigured() && !isGoogle) {
+          if (isSignUp) {
+            const res = await window.cloudBackend.signUp(emailInput, passInput, nameInput);
+            if (!res.success) {
+              if (alertEl) {
+                alertEl.style.display = 'block';
+                alertEl.textContent = res.error || 'Failed to create account.';
+              }
+              if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Account & Enter POS';
+              }
+              return;
+            }
+            if (res.needsEmailConfirm) {
+              showToast('Account created! Check your email inbox to verify.');
+            }
+          } else {
+            const res = await window.cloudBackend.signIn(emailInput, passInput);
+            if (!res.success) {
+              if (alertEl) {
+                alertEl.style.display = 'block';
+                alertEl.textContent = res.error || 'Invalid email or password.';
+              }
+              if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Sign In with Email';
+              }
+              return;
+            }
+          }
+        }
+
+        const effectiveName = nameInput || 'Staff';
+        state.ownerUser = {
+          isLoggedIn: true,
+          name: effectiveName,
+          email: emailInput || 'staff@cloudhouse.com.np',
+          initial: effectiveName[0] ? effectiveName[0].toUpperCase() : 'S'
+        };
+        persistState();
+        renderFirstTimeAuthOverlay();
+        renderApp();
+        showToast(`Signed in as ${effectiveName}`);
+        syncAllWithCloud(false);
+      } catch (err) {
+        if (alertEl) {
+          alertEl.style.display = 'block';
+          alertEl.textContent = err.message || 'Authentication error.';
+        }
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = isSignUp ? 'Create Account & Enter POS' : 'Sign In with Email';
+        }
+      }
     }
 
     function switchMainTab(tab) {
@@ -2088,20 +2254,20 @@
           return `
             <div class="order-card animate-view">
               <div class="order-card-header">
-                <div class="order-id-title">${order.table} | ${order.id}</div>
+                <div class="order-id-title">${escapeHtml(order.table)} | ${escapeHtml(order.id)}</div>
                 <div class="order-header-actions">
                   ${isPending ? `
-                    <button class="circle-plus-btn pressable" onclick="openMenuForTable('${order.table}')" title="Add more items">
+                    <button class="circle-plus-btn pressable" onclick="openMenuForTable('${escapeHtml(order.table)}')" title="Add more items">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                     </button>
                   ` : ''}
-                  <button class="dots-menu-btn" onclick="event.stopPropagation(); state.openPopoverOrderId = state.openPopoverOrderId === '${order.id}' ? null : '${order.id}'; renderApp();">
+                  <button class="dots-menu-btn" onclick="event.stopPropagation(); state.openPopoverOrderId = state.openPopoverOrderId === '${escapeHtml(order.id)}' ? null : '${escapeHtml(order.id)}'; renderApp();">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="#6B7280"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
                   </button>
                 </div>
               </div>
               ${state.openPopoverOrderId === order.id ? `
-                <div class="details-popover" onclick="openOrderDetailsModal('${order.id}')">
+                <div class="details-popover" onclick="openOrderDetailsModal('${escapeHtml(order.id)}')">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
                   <span>Details</span>
                 </div>
@@ -2109,24 +2275,24 @@
               <div class="order-items-list">
                 ${order.items.map(item => `
                   <div class="order-item-row">
-                    <div class="item-name-text">${item.name}</div>
+                    <div class="item-name-text">${escapeHtml(item.name)}</div>
                     <div class="item-qty-text">x${item.qty}</div>
-                    <div class="item-price-text">Rs. ${item.price.toFixed(2)}</div>
+                    <div class="item-price-text">Rs. ${(parseFloat(item.price) || 0).toFixed(2)}</div>
                   </div>
                 `).join('')}
               </div>
               <div class="order-card-footer">
                 ${isPending ? `
                   <div class="order-total-label">Rs. ${orderTotal.toFixed(2)}</div>
-                  <div class="order-time-label">${order.time}</div>
-                  <button class="checkout-btn pressable" onclick="openOrderDetailsModal('${order.id}')">
+                  <div class="order-time-label">${escapeHtml(order.time)}</div>
+                  <button class="checkout-btn pressable" onclick="openOrderDetailsModal('${escapeHtml(order.id)}')">
                     <span>Checkout</span>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                   </button>
                 ` : `
                   <div></div>
-                  <div class="order-time-label">${order.time}</div>
-                  <div class="order-total-label">Rs. ${orderTotal}</div>
+                  <div class="order-time-label">${escapeHtml(order.time)}</div>
+                  <div class="order-total-label">Rs. ${orderTotal.toFixed(2)}</div>
                 `}
               </div>
             </div>
@@ -2348,19 +2514,23 @@
     function completeCheckout(orderId) {
       const ord = state.orders.find(o => o.id === orderId);
       if (ord) {
-        const subtotal = ord.items.reduce((s, i) => s + i.price, 0);
-        const disc = parseFloat(state.checkoutDiscount) || 0;
+        const subtotal = ord.items.reduce((s, i) => s + (parseFloat(i.price) || 0), 0);
+        const disc = Math.min(subtotal, Math.max(0, parseFloat(state.checkoutDiscount) || 0));
         const finalAmt = Math.max(0, subtotal - disc);
 
         ord.status = 'Completed';
         ord.discount = disc;
         ord.paymentMethod = state.checkoutPaymentMethod;
-        ord.takenBy = state.ownerUser?.name || ord.takenBy || 'Dipak';
+        ord.takenBy = state.ownerUser?.name || ord.takenBy || 'Staff';
 
         if (state.checkoutPaymentMethod === 'Credit') {
           const cust = state.customers.find(c => c.name === state.checkoutCustomerForCredit);
-          if (cust) cust.due = (parseFloat(cust.due) || 0) + finalAmt;
+          if (cust) {
+            cust.due = (parseFloat(cust.due) || 0) + finalAmt;
+            if (window.cloudBackend) window.cloudBackend.upsertCustomer(cust);
+          }
         }
+        if (window.cloudBackend) window.cloudBackend.upsertOrder(ord);
         persistState();
         showToast(`${ord.id} Checked Out via ${state.checkoutPaymentMethod}`);
       }
@@ -2371,7 +2541,11 @@
     function cancelOrder(orderId) {
       const ord = state.orders.find(o => o.id === orderId);
       if (ord) {
+        if (!confirm(`Are you sure you want to cancel order ${ord.id} for table ${ord.table}?`)) {
+          return;
+        }
         ord.status = 'Cancelled';
+        if (window.cloudBackend) window.cloudBackend.upsertOrder(ord);
         persistState();
         showToast(`${ord.id} Cancelled`);
       }
@@ -2415,22 +2589,22 @@
         const count = pendingOrders.length;
         const total = pendingOrders.reduce((s, o) => s + o.items.reduce((acc, i) => acc + i.price, 0), 0);
         return count > 0 ? `
-              <div class="table-card pressable" onclick="openMenuForTable('${t.name}')">
-                <div class="table-card-header ${t.theme}">${t.name}</div>
+              <div class="table-card pressable" onclick="openMenuForTable('${escapeHtml(t.name)}')">
+                <div class="table-card-header ${t.theme}">${escapeHtml(t.name)}</div>
                 <div class="table-card-body">
                   <div class="order-count-row">${Icons.cart}<span class="order-count-badge">${count} Order</span></div>
                   <div class="table-active-price">Rs. ${total.toFixed(2)}</div>
                   <div class="table-action-row">
                     <!-- Pencil icon edits current order items (NO Checkout in Take Order!) -->
-                    <button class="table-svg-btn" onclick="event.stopPropagation(); openEditTableOrderModal('${pendingOrders[0].id}')" title="Modify Order Items">${Icons.pencil}</button>
+                    <button class="table-svg-btn" onclick="event.stopPropagation(); openEditTableOrderModal('${escapeHtml(pendingOrders[0].id)}')" title="Modify Order Items">${Icons.pencil}</button>
                     <!-- Plus icon opens Menu to add more items to this table -->
-                    <button class="table-svg-btn" onclick="event.stopPropagation(); openMenuForTable('${t.name}')" title="Add Items">${Icons.plusCircle}</button>
+                    <button class="table-svg-btn" onclick="event.stopPropagation(); openMenuForTable('${escapeHtml(t.name)}')" title="Add Items">${Icons.plusCircle}</button>
                   </div>
                 </div>
               </div>
             ` : `
-              <div class="table-card pressable" onclick="openMenuForTable('${t.name}')">
-                <div class="table-card-header ${t.theme}">${t.name}</div>
+              <div class="table-card pressable" onclick="openMenuForTable('${escapeHtml(t.name)}')">
+                <div class="table-card-header ${t.theme}">${escapeHtml(t.name)}</div>
                 <div class="table-card-body">
                   <div class="order-count-row">${Icons.cart}<span class="order-count-badge">0 Order</span></div>
                   <div class="tap-create-wrap">
@@ -2716,37 +2890,41 @@
       const categories = Object.keys(state.menu);
       const newItems = [];
       Object.keys(state.menuQuantities).forEach(itemName => {
-        const qty = state.menuQuantities[itemName];
+        const qty = parseInt(state.menuQuantities[itemName], 10) || 0;
         if (qty > 0) {
           for (const cat of categories) {
             const found = state.menu[cat].find(i => i.name === itemName);
             if (found) {
-              newItems.push({ name: itemName, qty, price: found.price * qty });
+              newItems.push({ name: itemName, qty, price: (parseFloat(found.price) || 0) * qty });
               break;
             }
           }
         }
       });
       if (newItems.length > 0) {
-        const existing = state.orders.find(o => o.status === 'Pending' && o.table === state.activeTableForMenu);
-        if (existing) {
-          existing.items.push(...newItems);
-          existing.takenBy = state.ownerUser?.name || 'Dipak';
+        let targetOrder = state.orders.find(o => o.status === 'Pending' && o.table === state.activeTableForMenu);
+        const staffName = state.ownerUser?.name || 'Staff';
+        if (targetOrder) {
+          targetOrder.items.push(...newItems);
+          targetOrder.takenBy = staffName;
         } else {
-          state.orders.unshift({
+          targetOrder = {
             id: `ORD-${13213 + state.orders.length}`,
             table: state.activeTableForMenu,
             status: 'Pending',
             time: new Date().toTimeString().slice(0, 5),
-            takenBy: state.ownerUser?.name || 'Dipak',
+            takenBy: staffName,
             paymentMethod: 'Cash',
             discount: 0,
             items: newItems
-          });
+          };
+          state.orders.unshift(targetOrder);
         }
+        if (window.cloudBackend) window.cloudBackend.upsertOrder(targetOrder);
         persistState();
-        showToast(`Order saved by ${state.ownerUser?.name || 'Dipak'}`);
+        showToast(`Order saved by ${staffName}`);
       }
+      state.menuQuantities = {};
       switchMainTab('takeOrder');
     }
 
@@ -2778,14 +2956,14 @@
         ${list.map((c, index) => `
           <div class="customer-card pressable" onclick="openEditCustomerModal(${index})">
             <div class="customer-left">
-              <div class="cust-avatar" style="background:${c.color}">${c.initials}</div>
+              <div class="cust-avatar" style="background:${c.color || '#1BA63F'}">${escapeHtml(c.initials || 'C')}</div>
               <div class="cust-info">
-                <h4>${c.name}</h4>
-                <div class="cust-phone">${Icons.phone}<span>${c.phone}</span></div>
+                <h4>${escapeHtml(c.name)}</h4>
+                <div class="cust-phone">${Icons.phone}<span>${escapeHtml(c.phone)}</span></div>
               </div>
             </div>
             <div style="text-align:right;">
-              <div class="due-status-row">${Icons.cardDue}<span>${c.due > 0 ? 'Total Due' : 'No Dues'}</span></div>${c.due > 0 ? `<div class="due-amount">Rs. ${Number(c.due).toFixed(2)}</div>` : ''}
+              <div class="due-status-row">${Icons.cardDue}<span>${(parseFloat(c.due) || 0) > 0 ? 'Total Due' : 'No Dues'}</span></div>${(parseFloat(c.due) || 0) > 0 ? `<div class="due-amount">Rs. ${(parseFloat(c.due) || 0).toFixed(2)}</div>` : ''}
             </div>
           </div>
         `).join('')}
@@ -2799,8 +2977,8 @@
     function openEditCustomerModal(index) {
       state.editingCustomerIndex = index;
       const cust = state.customers[index];
-      document.getElementById('editCustName').value = cust.name;
-      document.getElementById('editCustPhone').value = cust.phone;
+      document.getElementById('editCustName').value = cust.name || '';
+      document.getElementById('editCustPhone').value = cust.phone || '';
       document.getElementById('editCustDue').value = cust.due || 0;
       document.getElementById('editCustAddress').value = cust.address || '';
       document.getElementById('editCustomerModal').classList.add('open');
@@ -2813,8 +2991,9 @@
       cust.name = name;
       cust.initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || 'C';
       cust.phone = document.getElementById('editCustPhone').value.trim();
-      cust.due = parseFloat(document.getElementById('editCustDue').value) || 0;
+      cust.due = Math.max(0, parseFloat(document.getElementById('editCustDue').value) || 0);
       cust.address = document.getElementById('editCustAddress').value.trim();
+      if (window.cloudBackend) window.cloudBackend.upsertCustomer(cust);
       persistState();
       closeModals();
       showToast(`Updated ${cust.name}`);
@@ -2823,7 +3002,9 @@
 
     function clearCustomerDue() {
       if (state.editingCustomerIndex === null) return;
-      state.customers[state.editingCustomerIndex].due = 0;
+      const cust = state.customers[state.editingCustomerIndex];
+      cust.due = 0;
+      if (window.cloudBackend) window.cloudBackend.upsertCustomer(cust);
       persistState();
       closeModals();
       showToast('Customer Due Cleared');
@@ -2846,21 +3027,21 @@
       <div class="screen-body animate-view" style="padding-bottom:20px;">
         <div class="form-section-card">
           <div class="form-section-header"><span>Personal Details</span></div>
-          <input class="form-input" id="custNameInput" type="text" placeholder="Name (optional)" />
-          <input class="form-input" id="custPhoneInput" type="tel" placeholder="Mobile" />
+          <input class="form-input" id="custNameInput" type="text" placeholder="Name (e.g. Ramesh Giri)" />
+          <input class="form-input" id="custPhoneInput" type="tel" placeholder="Mobile Number" />
           <input class="form-input" id="custEmailInput" type="email" placeholder="Email (optional)" />
         </div>
         <div class="form-section-card">
           <div class="form-section-header" onclick="state.creditAccOpen=!state.creditAccOpen; renderApp();">
-            <span>Credit Information</span><span>${state.creditAccOpen ? '⌃' : '⌄'}</span>
+            <span>Initial Credit / Due</span><span>${state.creditAccOpen ? '⌃' : '⌄'}</span>
           </div>
-          ${state.creditAccOpen ? `<input class="form-input" id="custCreditInput" type="number" placeholder="Credit Limit (Rs.)" />` : ''}
+          ${state.creditAccOpen ? `<input class="form-input" id="custCreditInput" type="number" placeholder="Initial Due (Rs. 0)" />` : ''}
         </div>
         <div class="form-section-card">
           <div class="form-section-header" onclick="state.addressAccOpen=!state.addressAccOpen; renderApp();">
             <span>Address</span><span>${state.addressAccOpen ? '⌃' : '⌄'}</span>
           </div>
-          ${state.addressAccOpen ? `<input class="form-input" id="custAddrInput" type="text" placeholder="Address" />` : ''}
+          ${state.addressAccOpen ? `<input class="form-input" id="custAddrInput" type="text" placeholder="Address (e.g. Lalitpur)" />` : ''}
         </div>
       </div>
       <div style="padding:12px 14px calc(var(--safe-bottom) + 12px); background:var(--bg-canvas);">
@@ -2872,10 +3053,13 @@
     function saveNewCustomer() {
       const name = document.getElementById('custNameInput')?.value.trim() || 'Guest Customer';
       const phone = document.getElementById('custPhoneInput')?.value.trim() || '9800000000';
-      const due = parseFloat(document.getElementById('custCreditInput')?.value) || 0;
+      const due = Math.max(0, parseFloat(document.getElementById('custCreditInput')?.value) || 0);
+      const email = document.getElementById('custEmailInput')?.value.trim() || '';
       const address = document.getElementById('custAddrInput')?.value.trim() || '';
       const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || 'C';
-      state.customers.unshift({ initials, name, phone, color: '#1BA63F', due, address });
+      const newCust = { initials, name, phone, email, color: '#1BA63F', due, address };
+      state.customers.unshift(newCust);
+      if (window.cloudBackend) window.cloudBackend.upsertCustomer(newCust);
       persistState();
       showToast(`Customer "${name}" added`);
       switchMainTab('customers');
@@ -3163,7 +3347,7 @@
       doc.setFontSize(16);
       doc.text('Cloud House Cafe - Order History Report', 14, 18);
       doc.setFontSize(11);
-      doc.text(`Status: ${state.orderStatusTab} | Date: 08 Oct 2026 | Staff: ${state.ownerUser.name}`, 14, 26);
+      doc.text(`Status: ${state.orderStatusTab} | Date: ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} | Staff: ${state.ownerUser.name || 'Staff'}`, 14, 26);
 
       let y = 38;
       const list = state.orders.filter(o => o.status === state.orderStatusTab);
@@ -3193,13 +3377,13 @@
       doc.text('CLOUD HOUSE CAFE', 40, 12, { align: 'center' });
       doc.setFontSize(8);
       doc.text(`Order: ${ord.id} | Table: ${ord.table}`, 40, 18, { align: 'center' });
-      doc.text(`Date: 08 Oct, ${ord.time} | Taken By: ${state.ownerUser.name}`, 40, 23, { align: 'center' });
+      doc.text(`Date: ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}, ${ord.time || '12:00'} | Taken By: ${state.ownerUser.name || 'Staff'}`, 40, 23, { align: 'center' });
       doc.line(6, 26, 74, 26);
 
       let y = 32;
       ord.items.forEach(it => {
         doc.text(`${it.name} x${it.qty}`, 6, y);
-        doc.text(`Rs.${it.price.toFixed(0)}`, 74, y, { align: 'right' });
+        doc.text(`Rs. ${(parseFloat(it.price) || 0).toFixed(2)}`, 74, y, { align: 'right' });
         y += 5;
       });
       doc.line(6, y, 74, y);
@@ -3222,42 +3406,216 @@
       if (!window.jspdf) { window.print(); return; }
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
+      const completedOrders = state.orders.filter(o => o.status === 'Completed');
+      const pendingOrders = state.orders.filter(o => o.status === 'Pending');
+      const totalRev = completedOrders.reduce((s, o) => s + Math.max(0, o.items.reduce((a, i) => a + i.price, 0) - (o.discount || 0)), 0);
+      const totalOrdersCount = completedOrders.length + pendingOrders.length;
+      const avgVal = totalOrdersCount ? (totalRev / totalOrdersCount) : 0;
+      const cashCol = completedOrders.filter(o => o.paymentMethod === 'Cash').reduce((s, o) => s + Math.max(0, o.items.reduce((a, i) => a + i.price, 0) - (o.discount || 0)), 0);
+      const fonepayCol = completedOrders.filter(o => o.paymentMethod === 'Fonepay').reduce((s, o) => s + Math.max(0, o.items.reduce((a, i) => a + i.price, 0) - (o.discount || 0)), 0);
+
       doc.setFontSize(16);
       doc.text('Cloud House Cafe - Analytics Dashboard Report', 14, 20);
       doc.setFontSize(11);
-      doc.text('Date: Oct 08, 2026 | Logged In User: ' + state.ownerUser.name, 14, 28);
-      doc.text('Total Revenue: Rs. 1385.00 | Total Orders: 12 | Avg Order Value: Rs. 115.42', 14, 38);
-      doc.text('Payment Collections -> Cash: Rs. 290.00 | Fonepay: Rs. 250.00', 14, 46);
-      doc.text('Credit Analytics -> Credit Sales: Rs. 845.00 | Credit Collected: Rs. 6820.00', 14, 54);
-      doc.text('Total Collection Summary -> Rs. 7360.00 (Cash: Rs. 7110.00, Fonepay: Rs. 250.00)', 14, 62);
+      doc.text(`Date: ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} | Logged In Staff: ${state.ownerUser.name || 'Staff'}`, 14, 28);
+      doc.text(`Total Revenue: Rs. ${totalRev.toFixed(2)} | Total Orders: ${totalOrdersCount} | Avg Order Value: Rs. ${avgVal.toFixed(2)}`, 14, 38);
+      doc.text(`Payment Collections -> Cash: Rs. ${cashCol.toFixed(2)} | Fonepay: Rs. ${fonepayCol.toFixed(2)}`, 14, 46);
+      doc.text(`Completed Orders: ${completedOrders.length} | Active Pending Tables: ${pendingOrders.length}`, 14, 54);
       doc.save('Cloud-House-Analytics-Report.pdf');
       showToast('Downloaded Analytics PDF');
     }
 
     // ============================================================================
-    // 8. ACCOUNT PROFILE MODAL (Switch User or Sign Out)
+    // 8. ACCOUNT PROFILE MODAL (Switch User, Cloud Sync & Settings)
     // ============================================================================
     function openOwnerLoginModal() {
       const bodyEl = document.getElementById('ownerLoginBody');
+      const isCloudReady = window.cloudBackend && window.cloudBackend.isConfigured();
       bodyEl.innerHTML = `
       <div style="display:flex; align-items:center; gap:14px; padding:12px; background:#F9FAFB; border-radius:12px; border:1px solid #E5E7EB; margin-bottom:14px;">
         <div style="width:48px; height:48px; border-radius:50%; background:#1BA63F; color:#FFF; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:700;">
-          ${state.ownerUser.initial || 'D'}
+          ${escapeHtml(state.ownerUser.initial || 'D')}
         </div>
-        <div>
-          <div style="font-size:16px; font-weight:700; color:#1F2937;">${state.ownerUser.name}</div>
-          <div style="font-size:13.5px; color:#6B7280;">${state.ownerUser.email}</div>
+        <div style="flex:1; overflow:hidden;">
+          <div style="font-size:16px; font-weight:700; color:#1F2937; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${escapeHtml(state.ownerUser.name)}</div>
+          <div style="font-size:13px; color:#6B7280; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${escapeHtml(state.ownerUser.email)}</div>
           <span style="display:inline-block; margin-top:4px; background:#E8F7EC; color:#1BA63F; font-size:11.5px; font-weight:700; padding:2px 8px; border-radius:6px;">
             Active in "Taken By"
           </span>
         </div>
       </div>
+
+      <!-- Cloud Backend Status Card -->
+      <div style="padding:12px; background:#F0FDF4; border-radius:12px; border:1px solid #BBF7D0; margin-bottom:14px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+          <div style="display:flex; align-items:center; gap:6px; font-size:13.5px; font-weight:700; color:#166534;">
+            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${isCloudReady ? '#22C55E' : '#EAB308'};"></span>
+            <span>${isCloudReady ? 'Supabase Cloud Connected' : 'Supabase (Offline Mode)'}</span>
+          </div>
+          <button class="pressable" onclick="openSupabaseSettingsModal()" style="font-size:12px; font-weight:700; color:#15803D; background:#DCFCE7; border:none; padding:4px 8px; border-radius:6px; cursor:pointer;">
+            Configure
+          </button>
+        </div>
+        <div style="font-size:12px; color:#4B5563; line-height:1.4;">
+          ${isCloudReady ? 'Orders, menu items, and customer credits sync in real-time across devices.' : 'Working in local mode. Tap "Configure" to connect your Supabase project for multi-device sync.'}
+        </div>
+        ${isCloudReady ? `
+          <button class="pressable" onclick="syncAllWithCloud(true)" style="width:100%; margin-top:10px; height:36px; background:#1BA63F; color:#FFF; border:none; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">
+            ${Icons.refresh} <span>Sync All Cloud Data Now</span>
+          </button>
+        ` : ''}
+      </div>
+
       <button class="full-green-btn pressable" style="background:#FEE2E2; color:#D32F2F;"
-              onclick="state.ownerUser.isLoggedIn=false; persistState(); closeModals(); renderApp(); showToast('Signed Out');">
+              onclick="handleLogoutStaff()">
         Sign Out / Switch Staff Account
       </button>
     `;
       document.getElementById('ownerLoginModal').classList.add('open');
+    }
+
+    async function handleLogoutStaff() {
+      if (window.cloudBackend) {
+        await window.cloudBackend.signOut();
+      }
+      state.ownerUser.isLoggedIn = false;
+      persistState();
+      closeModals();
+      renderApp();
+      showToast('Signed Out');
+    }
+
+    function openSupabaseSettingsModal() {
+      closeModals();
+      const cfg = window.cloudBackend ? window.cloudBackend.getConfig() : { url: '', anonKey: '' };
+      const urlInput = document.getElementById('cfgSupabaseUrl');
+      const keyInput = document.getElementById('cfgSupabaseAnonKey');
+      if (urlInput) urlInput.value = cfg.url || '';
+      if (keyInput) keyInput.value = cfg.anonKey || '';
+      const stEl = document.getElementById('cfgConnectionStatus');
+      if (stEl) stEl.innerHTML = '';
+      const m = document.getElementById('supabaseSettingsModal');
+      if (m) m.classList.add('open');
+    }
+
+    async function testSupabaseCloudConnection() {
+      const url = document.getElementById('cfgSupabaseUrl')?.value.trim();
+      const key = document.getElementById('cfgSupabaseAnonKey')?.value.trim();
+      const statusEl = document.getElementById('cfgConnectionStatus');
+      if (!statusEl) return;
+      statusEl.innerHTML = '<span style="color:#6B7280;">Testing connection to Supabase...</span>';
+      if (!url || !key) {
+        statusEl.innerHTML = '<span style="color:#DC2626;">Please enter both Project URL and Anon Key.</span>';
+        return;
+      }
+      window.cloudBackend.saveConfig(url, key);
+      const res = await window.cloudBackend.testConnection();
+      if (res.success) {
+        statusEl.innerHTML = `<span style="color:#16A34A;">✓ ${escapeHtml(res.message)}</span>`;
+      } else {
+        statusEl.innerHTML = `<span style="color:#DC2626;">✕ ${escapeHtml(res.message)}</span>`;
+      }
+    }
+
+    async function saveSupabaseCloudSettings() {
+      const url = document.getElementById('cfgSupabaseUrl')?.value.trim();
+      const key = document.getElementById('cfgSupabaseAnonKey')?.value.trim();
+      if (!url || !key) {
+        showToast('Please provide both Supabase URL and Anon Key');
+        return;
+      }
+      window.cloudBackend.saveConfig(url, key);
+      showToast('Supabase Settings Saved!');
+      closeModals();
+      await syncAllWithCloud(true);
+      renderApp();
+    }
+
+    let isCloudSyncing = false;
+    async function syncAllWithCloud(showToastFeedback = false) {
+      if (!window.cloudBackend || !window.cloudBackend.isConfigured() || isCloudSyncing) return;
+      isCloudSyncing = true;
+      try {
+        if (showToastFeedback) showToast('Syncing with Supabase...');
+        // 1. Fetch remote orders and merge
+        const remoteOrders = await window.cloudBackend.fetchOrders();
+        if (Array.isArray(remoteOrders) && remoteOrders.length > 0) {
+          const localMap = new Map(state.orders.map(o => [o.id, o]));
+          remoteOrders.forEach(ro => {
+            localMap.set(ro.id, ro);
+          });
+          state.orders = Array.from(localMap.values());
+        }
+
+        // 2. Fetch remote customers and merge
+        const remoteCusts = await window.cloudBackend.fetchCustomers();
+        if (Array.isArray(remoteCusts) && remoteCusts.length > 0) {
+          const custMap = new Map(state.customers.map(c => [c.name, c]));
+          remoteCusts.forEach(rc => {
+            custMap.set(rc.name, { ...(custMap.get(rc.name) || {}), ...rc });
+          });
+          state.customers = Array.from(custMap.values());
+        }
+
+        // 3. Upsert initial local orders to cloud
+        for (const ord of state.orders.slice(0, 15)) {
+          window.cloudBackend.upsertOrder(ord);
+        }
+
+        // 4. Register realtime listener
+        window.cloudBackend.setupRealtimeListeners((payload) => {
+          handleRemoteOrderRealtimeChange(payload);
+        });
+
+        persistState();
+        if (showToastFeedback) showToast('Cloud sync complete!');
+        renderApp();
+      } catch (err) {
+        console.warn('Sync failed:', err);
+        if (showToastFeedback) showToast('Sync failed: ' + (err.message || 'Network error'));
+      } finally {
+        isCloudSyncing = false;
+      }
+    }
+
+    function handleRemoteOrderRealtimeChange(payload) {
+      if (!payload || !payload.new) return;
+      const ro = payload.new;
+      const orderData = {
+        id: ro.id,
+        table: ro.table_name,
+        status: ro.status,
+        time: ro.order_time,
+        takenBy: ro.taken_by,
+        paymentMethod: ro.payment_method,
+        discount: parseFloat(ro.discount) || 0,
+        items: Array.isArray(ro.items) ? ro.items : []
+      };
+      const idx = state.orders.findIndex(o => o.id === orderData.id);
+      if (idx >= 0) {
+        state.orders[idx] = orderData;
+      } else {
+        state.orders.unshift(orderData);
+      }
+      persistState();
+      renderApp();
+      showToast(`⚡ Order ${orderData.id} updated remotely`);
+    }
+
+    // Auto-check Supabase session on startup
+    async function initAppSession() {
+      if (window.cloudBackend && window.cloudBackend.isConfigured()) {
+        const session = await window.cloudBackend.getCurrentSession();
+        if (session && session.user) {
+          state.ownerUser.isLoggedIn = true;
+          state.ownerUser.email = session.user.email;
+          state.ownerUser.name = session.user.user_metadata?.full_name || state.ownerUser.name || 'Staff';
+          state.ownerUser.initial = state.ownerUser.name[0] ? state.ownerUser.name[0].toUpperCase() : 'S';
+          persistState();
+        }
+        syncAllWithCloud(false);
+      }
+      renderApp();
     }
 
     if ('serviceWorker' in navigator) {
@@ -3266,7 +3624,7 @@
       });
     }
 
-    renderApp();
+    initAppSession();
   </script>
 </body>
 
