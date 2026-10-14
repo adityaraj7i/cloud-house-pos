@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22C55E" />
+      <stop offset="100%" stop-color="#15803D" />
+    </linearGradient>
+  </defs>
+  <!-- Rounded App Icon Background -->
+  <rect width="512" height="512" rx="115" fill="url(#bgGrad)" />
+  <!-- Subtle Inner Border -->
+  <rect x="16" y="16" width="480" height="480" rx="102" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="4" />
+  <!-- Cloud Silhouette -->
+  <path d="M168 310h180c36 0 64-26 64-60 0-31-24-56-55-59-8-46-48-81-97-81-44 0-82 29-94 70-33 4-58 32-58 66 0 36 27 64 60 64z"
+        fill="#FFFFFF" />
+  <!-- Cafe Cup & Steam Integrated Inside Cloud -->
+  <path d="M214 270h76v42c0 21-17 38-38 38s-38-17-38-38v-42z" fill="#1BA63F" />
+  <path d="M290 278h14c10 0 18 8 18 18s-8 18-18 18h-14" fill="none" stroke="#1BA63F" stroke-width="10" stroke-linecap="round" />
+  <!-- Orange Accent Steam Curves -->
+  <path d="M238 248c0-10 10-12 10-22" fill="none" stroke="#F7931E" stroke-width="8" stroke-linecap="round" />
+  <path d="M266 248c0-10 10-12 10-22" fill="none" stroke="#F7931E" stroke-width="8" stroke-linecap="round" />
+  <!-- Brand Text -->
+  <text x="256" y="428" text-anchor="middle" fill="#FFFFFF" font-family="Inter, sans-serif" font-weight="800" font-size="42" letter-spacing="1.5">CLOUD HOUSE</text>
+</svg>

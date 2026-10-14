@@ -6,5 +6,7 @@ android/build/
 android/captures/
 build-output/
 *.log
+*.apk
+Cloud-House-POS-APK/
 .DS_Store
 Thumbs.db
